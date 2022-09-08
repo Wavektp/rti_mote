@@ -1,5 +1,5 @@
-#ifndef IRMODULE_H
-#define IRMODULE_H
+#ifndef IR_COMM_H
+#define IR_COMM_H
 
 #ifndef IR_TX_PIN
 #define IR_TX_PIN           23
@@ -14,9 +14,9 @@
 /**
  * @brief The algorithm to send an IR signal and estimate RSS.
  */
-class IRModule;
+class ir_comm;
 
-class IRModule {
+class ir_comm {
     private:
         
     public:
@@ -25,4 +25,4 @@ class IRModule {
         void sendExample();
         float rss();
 };
-#endif /*IRMODULE_H*/
+#endif /*IR_COMM_H*/
