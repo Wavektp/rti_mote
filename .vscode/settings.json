@@ -7,5 +7,12 @@
         "vector": "cpp",
         "initializer_list": "cpp"
     },
-    "C_Cpp.errorSquiggles": "Disabled"
+    "C_Cpp.errorSquiggles": "Enabled",
+    "editor.defaultFormatter": "ms-vscode.cpptools",
+    "editor.guides.bracketPairs": "active",
+    "files.autoSave": "onFocusChange",
+    "editor.tabSize": 2,
+    "C_Cpp.clang_format_fallbackStyle": "Chromium",
+    "C_Cpp.autocompleteAddParentheses": true,
+    "C_Cpp.clang_format_style": "Chromium"
 }
