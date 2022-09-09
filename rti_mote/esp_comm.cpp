@@ -7,10 +7,11 @@ uint8_t brAddr[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
 void esp_comm::setup() {
   // Enable Serial
   Serial.begin(SERIAL_BAUDRATE);
-  while (!Serial) {
-  }
+  while (!Serial) {}
   // Enable WiFi and Print MAC ADDRESS
   WiFi.mode(WIFI_STA);
   out("MAC ADDRESS: ");
   outln(WiFi.macAddress());
+
+  
 }
