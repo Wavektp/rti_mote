@@ -24,8 +24,8 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-#include "esp_comm.h"
 #include "ir_comm.h"
+#include "esp_comm.h"
 
 #define NF_INTERVAL 1000
 
