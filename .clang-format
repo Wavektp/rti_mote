@@ -2,9 +2,9 @@
 BasedOnStyle: Chromium
 AlignAfterOpenBracket: Align
 AlignConsecutiveMacros: 'true'
-AlignEscapedNewlines: Left
+# AlignEscapedNewlines: Left
 AlignTrailingComments: 'true'
-AllowAllArgumentsOnNextLine: 'true'
-AllowAllParametersOfDeclarationOnNextLine: 'true'
-AllowShortBlocksOnASingleLine: 'true'
+# AllowAllArgumentsOnNextLine: 'true'
+# AllowAllParametersOfDeclarationOnNextLine: 'true'
+# AllowShortBlocksOnASingleLine: 'false'
 ...
