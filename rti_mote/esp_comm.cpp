@@ -21,6 +21,7 @@ void esp_comm::setup() {
   }
   // Enable WiFi and change MAC ADDRESS
   customize_mac_address();
+  initESPNow();
 }
 
 void esp_comm::customize_mac_address() {
