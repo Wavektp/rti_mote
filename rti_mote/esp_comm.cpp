@@ -94,9 +94,9 @@ void macAddrToStr(const uint8_t* macAddr, char* str, int len) {
 
 void rtiMessageToStr(char* str, int len) {
   sniprintf(str, len, "<T:%02x><ID:%02x><S:%02x%02x><R:%02x%02x><N:%02x%02x>",
-            &incoming_rti.type, &incoming_rti.msgID, &incoming_rti.sNID,
-            &incoming_rti.sDID, &incoming_rti.rNID, &incoming_rti.rDID,
-            &incoming_rti.nNID, &incoming_rti.nDID);
+            incoming_rti.type, incoming_rti.msgID, incoming_rti.sNID,
+            incoming_rti.sDID, incoming_rti.rNID, incoming_rti.rDID,
+            incoming_rti.nNID, incoming_rti.nDID);
 }
 
 void create_rti_message() {
