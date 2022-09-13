@@ -31,7 +31,7 @@
         NET_PREFIX, DEVICE_ID                                               \
   }
 
-#define RTI_STR_SIZE 37
+#define RTI_STR_SIZE 38
 /// @brief frame format for RTI node exchanges
 typedef struct {
   /* data */

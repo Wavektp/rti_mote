@@ -100,7 +100,7 @@ void rtiMessageToStr(char* str, int len) {
 }
 
 void create_rti_message() {
-  outgoing_rti.type = 0x00;
+  outgoing_rti.type = 0x01;
   outgoing_rti.msgID = msg_count++;
   outgoing_rti.sNID = NET_PREFIX;
   outgoing_rti.sDID = DEVICE_ID;
