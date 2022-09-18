@@ -7,4 +7,5 @@ AlignTrailingComments: 'true'
 # AllowAllArgumentsOnNextLine: 'true'
 # AllowAllParametersOfDeclarationOnNextLine: 'true'
 # AllowShortBlocksOnASingleLine: 'false'
+IndentPPDirectives: BeforeHash
 ...

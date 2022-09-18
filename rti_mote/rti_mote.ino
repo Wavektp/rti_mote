@@ -27,17 +27,22 @@
 #include "esp_comm.h"
 #include "ir_comm.h"
 
-#define NF_INTERVAL 1000
-
-ir_comm iR;
+#ifdef ROOT_NODE
 esp_comm comM;
+
+void setup() {
+  comM.setup();
+}
+
+void loop() {}
+#else
+esp_comm comM;
+ir_comm iR;
 
 void setup() {
   comM.setup();
   iR.setup();
 }
 
-void loop() {
-  comM.send_rti();
-  delay(NF_INTERVAL);
-}
+void loop() {}
+#endif /*ROOT_NODE*/

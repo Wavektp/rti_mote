@@ -1,0 +1,99 @@
+#ifndef RTI_H
+#define RTI_H
+
+#include "esp_comm.h"
+
+/************************************************************************
+ *  RTI SCHEME DEFINITIONS                                           *
+ ************************************************************************/
+#define RTI_DEFAULT_SCHEME     0
+#define RTI_SIDEWAY_SCHEME     1
+#define RTI_RECTANGULAR_SCHEME 2
+#define RTI_CUSTOM_SCHEME      3
+
+#if RTI_SCHEME == RTI_DEFAULT_SCHEME
+  #define RTI_NEIGHBOUR_COUNT (RTI_NODE_COUNT - 1)
+#endif /*RTI_SCHEME == RTI_DEFAULT_SCHEME*/
+#if RTI_SCHEME == RTI_SIDEWAY_SCHEME
+  #if ((RTI_NODE_COUNT % 2) == 0)
+    #define RTI_NEIGHBOUR_COUNT RTI_NODE_COUNT / 2
+  #else
+    #error NODE COUNT in SIDEWAY scheme must be even
+  #endif /*(RTI_NODE_COUNT%2)!= 0*/
+#endif   /*RTI_SCHEME == RTI_SIDEWAY_SCHEME*/
+#if RTI_SCHEME == RTI_RECTANGULAR_SCHEME
+  #if ((RTI_NODE_COUNT % 4) == 0)
+    #define SIDE_NODE_COUNT (RTI_NODE_COUNT / 4)
+    #if ((DEVICE_ID % SIDE_NODE_COUNT) == 1)
+      #define RTI_NEIGHBOUR_COUNT (2 * SIDE_NODE_COUNT + 1)
+    #else
+      #define RTI_NEIGHBOUR_COUNT (3 * SIDE_NODE_COUNT - 1)
+    #endif
+    #define RECTANGULAR_SIDE ((DEVICE_ID - 1) / SIDE_NODE_COUNT + 1)
+  #else
+    #error NODE COUNT modulo 4 must be 0 in RECTANGULAR scheme
+  #endif /*(RTI_NODE_COUNT % 4)== 0*/
+#endif   /*RTI_SIDEWAY_SCHEME == RTI_RECTANGULAR_SCHEME*/
+#if RTI_SCHEME == RTI_CUSTOM_SCHEME
+  #define RTI_NODE_COUNT /*Must be manually assigned*/
+#endif
+/************************************************************************
+ *  RTI ROOT NODE DEFINITIONS                                           *
+ ************************************************************************/
+#ifdef ROOT_NODE
+  #define START_DELAY         2000
+  #define RTI_NEIGHBOUR_COUNT RTI_NODE_COUNT
+#endif /*ROOT_NODE*/
+/************************************************************************
+ *  RTI END DEVICE DEFINITIONS                                           *
+ ************************************************************************/
+
+#define MAX_RTI_NEIGHBOUR 50
+#if RTI_NEIGHBOUR_COUNT > MAX_RTI_NEIGHBOUR
+  #error NEIGHBOUR COUNT exceed max number
+#endif
+
+typedef unsigned char byte;
+
+typedef struct {
+  byte NID;
+  byte DID;
+} node_t;
+
+typedef struct {
+  node_t node;
+  byte irRSS;
+  byte RSS;
+} neighbour_t;
+
+typedef struct {
+  node_t neighbour[RTI_NEIGHBOUR_COUNT];
+} rti_info_t;
+
+#define RTI_MSG_MASK_RSS    0b10101010
+#define RTI_MSG_MASK_IR     0b01010101
+#define RTI_PREFIX_STR_SIZE 38
+#define RTI_PREFIX_STR      "<T:%02x><ID:%02x><S:%02x%02x><R:%02x%02x><N:%02x%02x>\n"
+#define RTI_RSS_STR         "<N%02x: RSS%02x>\n"
+#define RTI_RSS_STR_SIZE    13
+#define RTI_RSS_SUMSTR_SIZE RTI_RSS_STR_SIZE* RTI_NEIGHBOUR_COUNT
+#define RTI_IR_STR          "<N%02x: IR%02x>\n"
+#define RTI_IR_STR_SIZE     12
+#define RTI_IR_SUMSTR_SIZE  RTI_IR_STR_SIZE* RTI_NEIGHBOUR_COUNT
+#define RTI_STR_SIZE \
+  RTI_PREFIX_STR_SIZE + RTI_RSS_SUMSTR_SIZE + RTI_IR_SUMSTR_SIZE
+
+class rti {
+ private:
+  node_t next;
+  neighbour_t neighbour[RTI_NEIGHBOUR_COUNT];
+
+ public:
+#ifdef ROOT_NODE
+  void start_rti();
+#endif /*ROOT_NODE*/
+  void begin();
+  void msgToStr(message_t* msg, char* str);
+  void create_rti_message(message_t* msg, byte type, bool isCompleted);
+};
+#endif /*RTI_H*/

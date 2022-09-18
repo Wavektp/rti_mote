@@ -1,6 +1,8 @@
 #ifndef IR_COMM_H
 #define IR_COMM_H
 
+#include "setting.h"
+
 #ifndef IR_TX_PIN
 #define IR_TX_PIN 23
 #endif
