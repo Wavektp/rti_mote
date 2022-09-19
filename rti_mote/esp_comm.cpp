@@ -10,7 +10,7 @@ uint8_t device_mac_addr[] = DEVICE_MAC_ADDRESS;
 message_t incoming;
 message_t outgoing;
 
-void esp_comm::setup() {
+void esp_comm::begin(recv_cb_t cb) {
   // Enable Serial
   Serial.begin(SERIAL_BAUDRATE);
   while (!Serial) {
@@ -18,6 +18,7 @@ void esp_comm::setup() {
   // Enable WiFi and change MAC ADDRESS
   customize_mac_address();
   initESPNow();
+  recv_cb = cb;
 }
 
 void esp_comm::customize_mac_address() {
@@ -41,14 +42,14 @@ void esp_comm::initESPNow() {
     ESP.restart();
   }
   // register callbacks
-  esp_now_register_send_cb(send_cb);
-  esp_now_register_recv_cb(receive_cb);
+  esp_now_register_send_cb((esp_now_send_cb_t)&send_cb);
+  esp_now_register_recv_cb((esp_now_recv_cb_t)&receive);
   // add peer
   esp_now_peer_info_t peer_info = {};
   memcpy(&peer_info.peer_addr, brcst_addr, MAC_ADDR_SIZE);
   if (!esp_now_is_peer_exist(brcst_addr)) {
     if (esp_now_add_peer(&peer_info) != ESP_OK) {
-      out("Fail to add peer");
+      out("ERROR:ESP-NOW: Fail to add peer");
     }
   }
 }
@@ -71,12 +72,12 @@ void esp_comm::send(message_t* msg, size_t sz) {
     msg->msgID = conf.msg_id;
   }
 #endif /*END_DEVICE*/
-
+  timestamp_t stamp = millis();
   esp_err_t res = esp_now_send(brcst_addr, (uint8_t*)msg, sz);
 }
 
 void esp_comm::resend() {
-  esp_err_t res = esp_now_send(brcst_addr, (uint8_t*)&outgoing, conf.msg_sz);
+  send(&outgoing, conf.msg_sz);
 }
 
 void esp_comm::macAddrToStr(const uint8_t* macAddr, char* str, int len) {
@@ -98,8 +99,24 @@ message_t* esp_comm::get_outgoing() {
   return &outgoing;
 }
 
-void receive_cb(const uint8_t* macAddr, const uint8_t* data, int len) {
-  // memcpy(&incoming_rti, data, sizeof(incoming_rti));
+void esp_comm::receive(const uint8_t* macAddr, const uint8_t* data, int len) {
+  // reset watchdog
+  esp_task_wdt_reset();
+  // copy data to incoming message
+  re("Received MSG:");
+  memcpy(&incoming, data, sizeof(incoming));
+  if (conf.isObserve) {                   // Check next neighbour reception
+    re("..on check:");
+    if (conf.msg_id == incoming.msgID) {  // Check ID
+      re("CORRECT ID");
+      if ((conf.expect.NID == incoming.sNID) &&
+          (conf.expect.DID == incoming.sDID)) {  // Check sender
+        reln("NEXT NEIGHBOUR CONFIRMED >> CONFIRMED RECEPTION");
+        conf.isObserve = false;
+      }
+    }
+  }
+  recv_cb(&incoming);
   // char rti_message_str[RTI_STR_SIZE];
   // rtiMessageToStr(rti_message_str, RTI_STR_SIZE);
   // char macAddrStr[MAC_ADDR_STR_SIZE];
@@ -107,7 +124,6 @@ void receive_cb(const uint8_t* macAddr, const uint8_t* data, int len) {
 
   // outf("Received message from: %s\r\n  %s\n", macAddrStr, rti_message_str);
   // // check functionality
-  esp_task_wdt_reset();
 }
 
 void send_cb(const uint8_t* macAddr, esp_now_send_status_t st) {

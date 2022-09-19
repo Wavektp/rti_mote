@@ -3,6 +3,18 @@
 void start_rti();
 
 void RTI::begin() {
+  espC.begin((recv_cb_t)&receive);
+  outln("... initialize RTI Protocols");
+
+  out("DEVICE ID: ");
+  outln(DEVICE_ID);
+
+  out("NET PREFIX: ");
+  outln(NET_PREFIX);
+
+  out("\r\nNODE COUNT: ");
+  outln(RTI_NODE_COUNT);
+
   next.NID = NET_PREFIX;
   byte dID = DEVICE_ID + 1;
   if (dID <= RTI_NODE_COUNT) {
@@ -10,8 +22,9 @@ void RTI::begin() {
   } else {
     next.DID = 0;
   }
-#ifndef ROOT_NODE
+#ifdef END_DEVICE
   #if RTI_SCHEME == RTI_DEFAULT_SCHEME
+  outln("DEFAULT SCHEME");
   for (int i = 0; i < RTI_NEIGHBOUR_COUNT; i++) {
     neighbour[i].node.NID = NET_PREFIX;
     neighbour[i].RSS = 0;
@@ -22,6 +35,7 @@ void RTI::begin() {
   }
   #endif /*RTI_SCHEME == RTI_DEFAULT_SCHEME*/
   #if RTI_SCHEME == RTI_SIDEWAY_SCHEME
+  outln("SIDEWAY SCHEME");
   bool isEven = (DEVICE_ID % 2 == 0);
   for (int i = 0; i < RTI_NEIGHBOUR_COUNT; i++) {
     byte dID = (2 * i + 1);
@@ -35,6 +49,7 @@ void RTI::begin() {
   }
 
   #endif /*RTI_SCHEME == RTI_SIDEWAY_SCHEME*/
+  outln("RECTANGULAR SCHEME");
   #if RTI_SCHEME == RTI_RECTANGULAR_SCHEME
   for (int i = 0; i < RTI_NEIGHBOUR_COUNT; i++) {
     neighbour[i].node.NID = NET_PREFIX;
@@ -47,14 +62,25 @@ void RTI::begin() {
     }
   }
   #endif /*RTI_SIDEWAY_SCHEME == RTI_RECTANGULAR_SCHEME*/
+  outln("CUSTOM SCHEME");
   #if RTI_SCHEME == RTI_CUSTOM_SCHEME
     #error In CUSTOM SCHEME, neighbours need to be manually defined
   #endif
-#else  /*ROOT_NODE*/
+  out("NEIGHBOUR COUNT: ");
+  outln(RTI_NEIGHBOUR_COUNT);
+#endif /*END_DEVICE*/
+  outf("NEXT NEIGHBOUR: N%02x%02x", next.NID, next.DID);
+
+#ifdef ROOT_NODE
+  outln("-------- ROOT NODE --------");
   delay(START_DELAY);
+  outln("...Sending BEACON");
   start_rti();
 #endif /*ROOT_NODE*/
   // Set watchdog timer
+  outln("...Initialize watchdog");
+  out("RESET TIMEOUT: ");
+  outln(RESET_TIMEOUT);
   esp_task_wdt_init(RESET_TIMEOUT, true);
   esp_task_wdt_add(NULL);
 }
@@ -63,21 +89,36 @@ void RTI::msgToStr(message_t* msg, char* str) {
   char st[RTI_STR_SIZE];
   sniprintf(st, RTI_PREFIX_STR_SIZE, RTI_PREFIX_STR, msg->type, msg->msgID,
             msg->sNID, msg->sDID, msg->rNID, msg->rDID, msg->nNID, msg->nDID);
-  if (msg->content[0] != RTI_MSG_MASK_RSS) {
-    out("Error: Invalid Frame Format: not found RSS PREFIX");
+  if (msg->type == MESSAGE_TYPE_BEACON) {
+    strcat(st, "BEACON");
+    if (msg->len != 0) {
+      outln("Error: Invalid Frame Format: contents on BEACON are not defined");
+    }
+  } else {
+    size_t neighbourCount = (msg->len / 2 - 1);
+    if (msg->content[0] != RTI_MSG_MASK_RSS) {
+      outln("Error: Invalid Frame Format: not found RSS PREFIX");
+    }
+    for (int i = 1; i < (neighbourCount + 1); i++) {
+      char temp[RTI_RSS_STR_SIZE];
+      sniprintf(st, RTI_RSS_STR_SIZE, RTI_RSS_STR, i, msg->content[i]);
+      re("DEBUG: check concat string: ");
+      re(temp);
+      strcat(st, temp);
+      reln(st);
+    }
+    if (msg->content[(neighbourCount + 1)] != RTI_MSG_MASK_IR) {
+      out("Error: Invalid Frame Format: not found IR PREFIX");
+    }
+    for (int i = (neighbourCount + 2); i < (2 * neighbourCount + 2); i++) {
+      char temp[RTI_IR_STR_SIZE];
+      sniprintf(st, RTI_IR_STR_SIZE, RTI_IR_STR, (i - (neighbourCount + 2)),
+                msg->content[i]);
+      strcat(st, temp);
+    }
   }
-  size_t neighbourCount = (msg->len / 2 - 1);
-  for (int i = 1; i < (neighbourCount + 1); i++) {
-    char temp[RTI_RSS_STR_SIZE];
-    sniprintf(st, RTI_RSS_STR_SIZE, RTI_RSS_STR, i, msg->content[i]);
-    strcat(st, temp);
-  }
-  for (int i = (neighbourCount + 2); i < (2 * neighbourCount + 2); i++) {
-    char temp[RTI_IR_STR_SIZE];
-    sniprintf(st, RTI_IR_STR_SIZE, RTI_IR_STR, (i - (neighbourCount + 2)),
-              msg->content[i]);
-    strcat(st, temp);
-  }
+  re("MESSAGE TO COPY:");
+  reln(st);
   strcpy(str, st);
 }
 
@@ -115,6 +156,10 @@ void RTI::create_rti_message(message_t* msg, byte type, bool isCompleted) {
          i++) {
       msg->content[i] = neighbour[i - (RTI_NEIGHBOUR_COUNT + 2)].irRSS;
     }
+    msg->content[(2 * RTI_NEIGHBOUR_COUNT + 2)] = RTI_MSG_MASK_END;
+    for (int i = 2 * RTI_NEIGHBOUR_COUNT + 3; i < MAX_CONTENT_SIZE; i++) {
+      msg->content[i] = 0;
+    }
   }
 #endif /*END_DEVICE*/
 }
@@ -125,14 +170,32 @@ void RTI::start_rti() {
   espC.send(m, sizeof(m));
   // TODO Confirm reception of next node
 }
+#endif /*ROOT_NODE*/
 
 void RTI::routine() {
   if (espC.checkTimeout(RTI_TIMEOUT)) {
-    // Next node does not tranmit assume incorrect reception, repeat the last
-    // message
+    // Next node does not tranmit assuming incorrect reception, repeat the last
+    // message -> resend
     espC.resend();
   }
 }
 
-void RTI::receive() {}
-#endif /*ROOT_NODE*/
+void RTI::receive(message_t* incoming) {
+  char outStr[RTI_STR_SIZE];
+  msgToStr(incoming, outStr);
+  // copy data to incoming message
+  re("RTI CALLBACK: ");
+  if (incoming->type == MESSAGE_TYPE_BEACON) {
+    // Still no action
+  }
+  if (incoming->type == MESSAGE_TYPE_CONTENT) {
+    // record RSS from ESP-NOW
+    // conclude IR of the passing neighbours
+  }
+  if (incoming->nNID == NET_PREFIX &&
+      incoming->nDID == DEVICE_ID) {  // if this node is the next sender
+    // send IR 
+    irC.send();
+
+  }
+}
