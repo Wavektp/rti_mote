@@ -4,10 +4,10 @@
 #include "setting.h"
 
 #ifndef IR_TX_PIN
-#define IR_TX_PIN 23
+  #define IR_TX_PIN 23
 #endif
 #ifndef IR_RX_PIN
-#define IR_RX_PIN 33
+  #define IR_RX_PIN 33
 #endif
 
 #define IR_RECEIVE_PIN  15  // D15
@@ -15,7 +15,8 @@
 #define TONE_PIN        27  // D27 25 & 26 are DAC0 and 1
 #define APPLICATION_PIN 16  // RX2 pin
 
-#define IR_ADDRESS_EXAMPLE 0x0102
+#define IR_ADDRESS_16BIT   ((NET_PREFIX << 8) | DEVICE_ID)
+#define IR_ADDRESS_32BIT ((IR_ADDRESS_16BIT << 16) | IR_ADDRESS_16BIT)
 #define IR_CODE_EXAMPLE    0x34
 #define IR_REPETITION      0
 
@@ -32,9 +33,9 @@ class ir_comm {
    *
    * @param txPin
    */
-  void setup(unsigned int txPin);
-  void setup();
-  void sendExample();
+  void begin(unsigned int txPin);
+  void begin();
+  void send();
   float rss();
 };
 #endif /*IR_COMM_H*/

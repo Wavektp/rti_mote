@@ -25,7 +25,7 @@
   #if ((RTI_NODE_COUNT % 4) == 0)
     #define SIDE_NODE_COUNT (RTI_NODE_COUNT / 4)
     #if ((DEVICE_ID % SIDE_NODE_COUNT) == 1)
-      #define RTI_NEIGHBOUR_COUNT (2 * SIDE_NODE_COUNT + 1)
+      #define RTI_NEIGHBOUR_COUNT (2 * SIDE_NODE_COUNT - 1)
     #else
       #define RTI_NEIGHBOUR_COUNT (3 * SIDE_NODE_COUNT - 1)
     #endif
@@ -55,27 +55,25 @@
 
 typedef struct {
   node_t node;
-  byte irRSS;
-  byte RSS;
+  byte irRSS = 0;
+  byte RSS = 0;
 } neighbour_t;
 
 typedef struct {
   node_t neighbour[RTI_NEIGHBOUR_COUNT];
 } rti_info_t;
 
-#define RTI_MSG_MASK_RSS    0b10101010
-#define RTI_MSG_MASK_IR     0b01010101
+#define RTI_MSG_MASK_RSS 0b10101010
+#define RTI_MSG_MASK_IR  0b01010101
+#define RTI_MSG_MASK_END 0b11001100
+
 #define RTI_PREFIX_STR_SIZE 38
 #define RTI_PREFIX_STR      "<T:%02x><ID:%02x><S:%02x%02x><R:%02x%02x><N:%02x%02x>\n"
 #define RTI_RSS_STR         "<N%02x: RSS%02x>\n"
 #define RTI_RSS_STR_SIZE    13
-#define RTI_RSS_SUMSTR_SIZE RTI_RSS_STR_SIZE* RTI_NEIGHBOUR_COUNT
 #define RTI_IR_STR          "<N%02x: IR%02x>\n"
 #define RTI_IR_STR_SIZE     12
-#define RTI_IR_SUMSTR_SIZE  RTI_IR_STR_SIZE* RTI_NEIGHBOUR_COUNT
-#define RTI_STR_SIZE \
-  RTI_PREFIX_STR_SIZE + RTI_RSS_SUMSTR_SIZE + RTI_IR_SUMSTR_SIZE
-
+#define RTI_STR_SIZE        250
 #define RTI_TIMEOUT 100
 class RTI {
  private:
@@ -92,6 +90,6 @@ class RTI {
   void msgToStr(message_t* msg, char* str);
   void create_rti_message(message_t* msg, byte type, bool isCompleted);
   void routine();
-  void receive();
+  void receive(message_t* incoming);
 };
 #endif /*RTI_H*/

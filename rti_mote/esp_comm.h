@@ -8,9 +8,16 @@
 #include "esp_wifi.h"
 #include "setting.h"
 
-#define out(x)          Serial.print(x)
-#define outf(x, y, z)   Serial.printf(x, y, z)
-#define outln(x)        Serial.println(x)
+#define out(x)        Serial.print(x)
+#define outf(x, y, z) Serial.printf(x, y, z)
+#define outln(x)      Serial.println(x)
+#ifdef DEBUG_REPORT
+  #define re(x)   Serial.print(x)
+  #define reln(x) Serial.println(x)
+#else
+  #define re(x)   
+  #define reln(x) 
+#endif /*DEBUG_REPORT*/
 #define SERIAL_BAUDRATE 115200
 
 #define BROADCAST_CODE    0xFF
@@ -61,7 +68,7 @@ typedef struct {
 } message_t;
 
 typedef unsigned char byte;
-
+typedef void (*recv_cb_t)(message_t* incoming);
 typedef struct {
   byte NID;
   byte DID;
@@ -83,6 +90,8 @@ class esp_comm {
  private:
   confirmable_t conf;
   timestamp_t stamp;
+  recv_cb_t recv_cb;
+
   /// @brief Initialize WIFI and change MAC ADDRESS
   void customize_mac_address();
   /// @brief Initialize ESP-NOW
@@ -90,7 +99,7 @@ class esp_comm {
 
  public:
   /// @brief initialize communication module on esp
-  void setup();
+  void begin(recv_cb_t recv_cb);
   /// @brief Broadcast msg via ESP-NOW
   /// @param pointer to message
   /// @param size of message
@@ -104,12 +113,11 @@ class esp_comm {
   bool checkTimeout(timestamp_t timeout);
   message_t* get_incoming();
   message_t* get_outgoing();
+  /******************************************************************************
+   *  Callback Functions on Reception/Transmission *
+   ******************************************************************************/
+  void receive(const uint8_t* macAddr, const uint8_t* data, int len);
+  void send_cb(const uint8_t* macAddr, esp_now_send_status_t st);
 };
-
-/******************************************************************************
- *  Callback Functions on Reception/Transmission                              *
- ******************************************************************************/
-void receive_cb(const uint8_t* macAddr, const uint8_t* data, int len);
-void send_cb(const uint8_t* macAddr, esp_now_send_status_t st);
 
 #endif /*ESP_COMM_H*/
