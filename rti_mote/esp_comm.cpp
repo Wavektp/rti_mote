@@ -1,11 +1,14 @@
 #include "esp_comm.h"
 
+#ifdef ROOT_NODE
+byte msgID = 0;
+#endif /*ROOT_NODE*/
+
 const uint8_t brcst_addr[] = BROADCAST_MAC_ADDRESS;
 uint8_t device_mac_addr[] = DEVICE_MAC_ADDRESS;
 
-int msg_count = 0;
-message_t incoming_rti;
-message_t outgoing_rti;
+message_t incoming;
+message_t outgoing;
 
 void esp_comm::setup() {
   // Enable Serial
@@ -15,9 +18,6 @@ void esp_comm::setup() {
   // Enable WiFi and change MAC ADDRESS
   customize_mac_address();
   initESPNow();
-  // Set watchdog timer
-  esp_task_wdt_init(RESET_TIMEOUT, true);
-  esp_task_wdt_add(NULL);
 }
 
 void esp_comm::customize_mac_address() {
@@ -53,14 +53,49 @@ void esp_comm::initESPNow() {
   }
 }
 
-void esp_comm::send(uint8_t* msg, size_t sz) {
+void esp_comm::send(message_t* msg, size_t sz) {
   // send message
-  esp_err_t res = esp_now_send(brcst_addr, msg, sz);
+  if (((msg->type) & MESSAGE_INCOMPLETE_FLAG) == 0x00) {
+    conf.isObserve = true;
+    conf.msg_sz = sz;
+    conf.expect.NID = msg->nNID;
+    conf.expect.DID = msg->nDID;
+  }
+#ifdef ROOT_NODE
+  if ((msg->type) == MESSAGE_TYPE_BEACON) {
+    msg->msgID = msgID++;
+  }
+#endif /*ROOT_NODE*/
+#ifdef END_DEVICE
+  if ((msg->type) == MESSAGE_TYPE_CONTENT) {
+    msg->msgID = conf.msg_id;
+  }
+#endif /*END_DEVICE*/
+
+  esp_err_t res = esp_now_send(brcst_addr, (uint8_t*)msg, sz);
+}
+
+void esp_comm::resend() {
+  esp_err_t res = esp_now_send(brcst_addr, (uint8_t*)&outgoing, conf.msg_sz);
 }
 
 void esp_comm::macAddrToStr(const uint8_t* macAddr, char* str, int len) {
   snprintf(str, len, "%02x:%02x:%02x:%02x:%02x:%02x", macAddr[0], macAddr[1],
            macAddr[2], macAddr[3], macAddr[4], macAddr[5]);
+}
+
+bool esp_comm::checkTimeout(timestamp_t timeout) {
+  if (conf.isObserve) {
+    return ((millis() - stamp) > timeout);
+  }
+  return false;
+}
+message_t* esp_comm::get_incoming() {
+  return &incoming;
+}
+
+message_t* esp_comm::get_outgoing() {
+  return &outgoing;
 }
 
 void receive_cb(const uint8_t* macAddr, const uint8_t* data, int len) {
@@ -79,4 +114,3 @@ void send_cb(const uint8_t* macAddr, esp_now_send_status_t st) {
   out("\r\n ESP-NOW Sent: ");
   outln(st == ESP_NOW_SEND_SUCCESS ? "SUCCESS" : "FAILED");
 }
-

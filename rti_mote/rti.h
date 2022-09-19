@@ -2,7 +2,7 @@
 #define RTI_H
 
 #include "esp_comm.h"
-
+#include "ir_comm.h"
 /************************************************************************
  *  RTI SCHEME DEFINITIONS                                           *
  ************************************************************************/
@@ -53,13 +53,6 @@
   #error NEIGHBOUR COUNT exceed max number
 #endif
 
-typedef unsigned char byte;
-
-typedef struct {
-  byte NID;
-  byte DID;
-} node_t;
-
 typedef struct {
   node_t node;
   byte irRSS;
@@ -83,10 +76,13 @@ typedef struct {
 #define RTI_STR_SIZE \
   RTI_PREFIX_STR_SIZE + RTI_RSS_SUMSTR_SIZE + RTI_IR_SUMSTR_SIZE
 
-class rti {
+#define RTI_TIMEOUT 100
+class RTI {
  private:
   node_t next;
   neighbour_t neighbour[RTI_NEIGHBOUR_COUNT];
+  esp_comm espC;
+  ir_comm irC;
 
  public:
 #ifdef ROOT_NODE
@@ -95,5 +91,7 @@ class rti {
   void begin();
   void msgToStr(message_t* msg, char* str);
   void create_rti_message(message_t* msg, byte type, bool isCompleted);
+  void routine();
+  void receive();
 };
 #endif /*RTI_H*/

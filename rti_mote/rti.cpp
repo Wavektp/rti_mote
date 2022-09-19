@@ -2,7 +2,7 @@
 
 void start_rti();
 
-void rti::begin() {
+void RTI::begin() {
   next.NID = NET_PREFIX;
   byte dID = DEVICE_ID + 1;
   if (dID <= RTI_NODE_COUNT) {
@@ -54,9 +54,12 @@ void rti::begin() {
   delay(START_DELAY);
   start_rti();
 #endif /*ROOT_NODE*/
+  // Set watchdog timer
+  esp_task_wdt_init(RESET_TIMEOUT, true);
+  esp_task_wdt_add(NULL);
 }
 
-void rti::msgToStr(message_t* msg, char* str) {
+void RTI::msgToStr(message_t* msg, char* str) {
   char st[RTI_STR_SIZE];
   sniprintf(st, RTI_PREFIX_STR_SIZE, RTI_PREFIX_STR, msg->type, msg->msgID,
             msg->sNID, msg->sDID, msg->rNID, msg->rDID, msg->nNID, msg->nDID);
@@ -78,17 +81,22 @@ void rti::msgToStr(message_t* msg, char* str) {
   strcpy(str, st);
 }
 
-void rti::create_rti_message(message_t* msg, byte type, bool isCompleted) {
+void RTI::create_rti_message(message_t* msg, byte type, bool isCompleted) {
   /*create message prefix*/
   msg->type = type;
   msg->sNID = NET_PREFIX;
   msg->sDID = DEVICE_ID;
   msg->rNID = BROADCAST_CODE;
   msg->rDID = BROADCAST_CODE;
-  msg->nNID = next.NID;
-  msg->nDID = next.DID;
+  if (isCompleted) {
+    msg->nNID = next.NID;
+    msg->nDID = next.DID;
+  } else {
+    msg->nNID = NET_PREFIX;
+    msg->nDID = DEVICE_ID;
+  }
 #ifdef ROOT_NODE
-  if (type == MESSAGE_TYPE_ฺBEACON) {
+  if (type == MESSAGE_TYPE_BEACON) {
     msg->len = 0;
     for (int i = 0; i < MAX_CONTENT_SIZE; i++) {
       msg->content[i] = 0;
@@ -111,7 +119,20 @@ void rti::create_rti_message(message_t* msg, byte type, bool isCompleted) {
 #endif /*END_DEVICE*/
 }
 #ifdef ROOT_NODE
-void start_rti() {
-  // TODO Algorithm to send and receive RTI FRAME
+void RTI::start_rti() {
+  message_t* m = espC.get_outgoing();
+  create_rti_message(m, MESSAGE_TYPE_BEACON, true);
+  espC.send(m, sizeof(m));
+  // TODO Confirm reception of next node
 }
+
+void RTI::routine() {
+  if (espC.checkTimeout(RTI_TIMEOUT)) {
+    // Next node does not tranmit assume incorrect reception, repeat the last
+    // message
+    espC.resend();
+  }
+}
+
+void RTI::receive() {}
 #endif /*ROOT_NODE*/

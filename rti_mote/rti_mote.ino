@@ -24,25 +24,14 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-#include "esp_comm.h"
-#include "ir_comm.h"
+#include "rti.h"
 
-#ifdef ROOT_NODE
-esp_comm comM;
+RTI rti;
 
 void setup() {
-  comM.setup();
+  rti.begin();
 }
 
-void loop() {}
-#else
-esp_comm comM;
-ir_comm iR;
-
-void setup() {
-  comM.setup();
-  iR.setup();
+void loop() {
+  rti.routine();
 }
-
-void loop() {}
-#endif /*ROOT_NODE*/
