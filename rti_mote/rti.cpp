@@ -3,7 +3,8 @@
 void start_rti();
 
 void RTI::begin() {
-  espC.begin((recv_cb_t)&receive);
+  espC.begin((recv_cb_t)&RTI::receive);
+  irC.begin(IR_SEND_PIN);
   outln("... initialize RTI Protocols");
 
   out("DEVICE ID: ");
@@ -196,6 +197,5 @@ void RTI::receive(message_t* incoming) {
       incoming->nDID == DEVICE_ID) {  // if this node is the next sender
     // send IR 
     irC.send();
-
   }
 }

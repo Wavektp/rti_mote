@@ -24,3 +24,16 @@
  **/
 #define RTI_SCHEME 1
 #define DEBUG_REPORT
+/***********************************************************
+ *              SERIAL_COM DEFINITION                      *
+ ***********************************************************/
+#define out(x)        Serial.print(x)
+#define outf(x, y, z) Serial.printf(x, y, z)
+#define outln(x)      Serial.println(x)
+#ifdef DEBUG_REPORT
+  #define re(x)   Serial.print(x)
+  #define reln(x) Serial.println(x)
+#else
+  #define re(x)   
+  #define reln(x) 
+#endif /*DEBUG_REPORT*/

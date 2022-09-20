@@ -12,12 +12,15 @@ message_t outgoing;
 
 void esp_comm::begin(recv_cb_t cb) {
   // Enable Serial
+
   Serial.begin(SERIAL_BAUDRATE);
   while (!Serial) {
   }
   // Enable WiFi and change MAC ADDRESS
   customize_mac_address();
   initESPNow();
+  outln("... initialize ESP-NOW");
+
   recv_cb = cb;
 }
 
@@ -42,8 +45,8 @@ void esp_comm::initESPNow() {
     ESP.restart();
   }
   // register callbacks
-  esp_now_register_send_cb((esp_now_send_cb_t)&send_cb);
-  esp_now_register_recv_cb((esp_now_recv_cb_t)&receive);
+  esp_now_register_send_cb((esp_now_send_cb_t)&esp_comm::send_cb);
+  esp_now_register_recv_cb((esp_now_recv_cb_t)&esp_comm::receive);
   // add peer
   esp_now_peer_info_t peer_info = {};
   memcpy(&peer_info.peer_addr, brcst_addr, MAC_ADDR_SIZE);
@@ -105,7 +108,7 @@ void esp_comm::receive(const uint8_t* macAddr, const uint8_t* data, int len) {
   // copy data to incoming message
   re("Received MSG:");
   memcpy(&incoming, data, sizeof(incoming));
-  if (conf.isObserve) {                   // Check next neighbour reception
+  if (conf.isObserve) {  // Check next neighbour reception
     re("..on check:");
     if (conf.msg_id == incoming.msgID) {  // Check ID
       re("CORRECT ID");
@@ -126,7 +129,7 @@ void esp_comm::receive(const uint8_t* macAddr, const uint8_t* data, int len) {
   // // check functionality
 }
 
-void send_cb(const uint8_t* macAddr, esp_now_send_status_t st) {
+void esp_comm::send_cb(const uint8_t* macAddr, esp_now_send_status_t st) {
   out("\r\n ESP-NOW Sent: ");
   outln(st == ESP_NOW_SEND_SUCCESS ? "SUCCESS" : "FAILED");
 }

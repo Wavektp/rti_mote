@@ -1,23 +1,13 @@
 #ifndef ESP_COMM_H
 #define ESP_COMM_H
 
-#include <Arduino.h>
+//#include <Arduino.h>
 #include <WiFi.h>
 #include <esp_now.h>
 #include "esp_task_wdt.h"
 #include "esp_wifi.h"
 #include "setting.h"
 
-#define out(x)        Serial.print(x)
-#define outf(x, y, z) Serial.printf(x, y, z)
-#define outln(x)      Serial.println(x)
-#ifdef DEBUG_REPORT
-  #define re(x)   Serial.print(x)
-  #define reln(x) Serial.println(x)
-#else
-  #define re(x)   
-  #define reln(x) 
-#endif /*DEBUG_REPORT*/
 #define SERIAL_BAUDRATE 115200
 
 #define BROADCAST_CODE    0xFF
