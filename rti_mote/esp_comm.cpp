@@ -10,7 +10,7 @@ uint8_t device_mac_addr[] = DEVICE_MAC_ADDRESS;
 message_t incoming;
 message_t outgoing;
 
-void esp_comm::begin(recv_cb_t cb) {
+void esp_comm::begin(recv_cb_t recv, report_cb_t rep) {
   // Enable Serial
 
   Serial.begin(SERIAL_BAUDRATE);
@@ -21,7 +21,8 @@ void esp_comm::begin(recv_cb_t cb) {
   initESPNow();
   outln("... initialize ESP-NOW");
 
-  recv_cb = cb;
+  recv_cb = recv;
+  rep_cb = rep;
 }
 
 void esp_comm::customize_mac_address() {
@@ -55,6 +56,9 @@ void esp_comm::initESPNow() {
       out("ERROR:ESP-NOW: Fail to add peer");
     }
   }
+  esp_wifi_set_promiscuous(true);
+  esp_wifi_set_promiscuous_rx_cb(
+      (wifi_promiscuous_cb_t)&esp_comm::promiscuous_rx_cb);
 }
 
 void esp_comm::send(message_t* msg, size_t sz) {
@@ -108,10 +112,12 @@ void esp_comm::receive(const uint8_t* macAddr, const uint8_t* data, int len) {
   // copy data to incoming message
   re("Received MSG:");
   memcpy(&incoming, data, sizeof(incoming));
+  cSender.NID = incoming.sNID;
+  cSender.DID = incoming.sDID;
   if (conf.isObserve) {  // Check next neighbour reception
     re("..on check:");
     if (conf.msg_id == incoming.msgID) {  // Check ID
-      re("CORRECT ID");
+      re("CORRECT ID..");
       if ((conf.expect.NID == incoming.sNID) &&
           (conf.expect.DID == incoming.sDID)) {  // Check sender
         reln("NEXT NEIGHBOUR CONFIRMED >> CONFIRMED RECEPTION");
@@ -132,4 +138,21 @@ void esp_comm::receive(const uint8_t* macAddr, const uint8_t* data, int len) {
 void esp_comm::send_cb(const uint8_t* macAddr, esp_now_send_status_t st) {
   out("\r\n ESP-NOW Sent: ");
   outln(st == ESP_NOW_SEND_SUCCESS ? "SUCCESS" : "FAILED");
+}
+
+void esp_comm::promiscuous_rx_cb(void* buf, wifi_promiscuous_pkt_type_t type) {
+  // All espnow traffic uses action frames which are a subtype of the mgmnt
+  // frames so filter out everything else.
+  if (type != WIFI_PKT_MGMT)
+    return;
+
+  const wifi_promiscuous_pkt_t* ppkt = (wifi_promiscuous_pkt_t*)buf;
+  re("WIFI CALLBACK: Retrieving RSSI: ");
+  rssi = ppkt->rx_ctrl.rssi;
+  reln(rssi);
+  rep_cb(rssi);
+}
+
+node_t* esp_comm::getCurrentSender() {
+  return &cSender;
 }
