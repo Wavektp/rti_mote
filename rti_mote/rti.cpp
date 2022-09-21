@@ -3,7 +3,7 @@
 void start_rti();
 
 void RTI::begin() {
-  espC.begin((recv_cb_t)&RTI::receive);
+  espC.begin((recv_cb_t)&RTI::receive, (report_cb_t)&RTI::report);
   irC.begin(IR_SEND_PIN);
   outln("... initialize RTI Protocols");
 
@@ -16,13 +16,13 @@ void RTI::begin() {
   out("\r\nNODE COUNT: ");
   outln(RTI_NODE_COUNT);
 
-  next.NID = NET_PREFIX;
-  byte dID = DEVICE_ID + 1;
-  if (dID <= RTI_NODE_COUNT) {
-    next.DID = dID;
-  } else {
-    next.DID = 0;
-  }
+  // next.NID = NET_PREFIX;
+  // byte dID = DEVICE_ID + 1;
+  // if (dID <= RTI_NODE_COUNT) {
+  //   next.DID = dID;
+  // } else {
+  //   next.DID = 0;
+  // }
 #ifdef END_DEVICE
   #if RTI_SCHEME == RTI_DEFAULT_SCHEME
   outln("DEFAULT SCHEME");
@@ -70,7 +70,8 @@ void RTI::begin() {
   out("NEIGHBOUR COUNT: ");
   outln(RTI_NEIGHBOUR_COUNT);
 #endif /*END_DEVICE*/
-  outf("NEXT NEIGHBOUR: N%02x%02x", next.NID, next.DID);
+  outf("NEXT NEIGHBOUR: N%02x%02x", NEXT_NEIGHBOUR_NET_PREFIX,
+       NEXT_NEIGHBOUR_DEVICE_ID);
 
 #ifdef ROOT_NODE
   outln("-------- ROOT NODE --------");
@@ -131,8 +132,8 @@ void RTI::create_rti_message(message_t* msg, byte type, bool isCompleted) {
   msg->rNID = BROADCAST_CODE;
   msg->rDID = BROADCAST_CODE;
   if (isCompleted) {
-    msg->nNID = next.NID;
-    msg->nDID = next.DID;
+    msg->nNID = NEXT_NEIGHBOUR_NET_PREFIX;
+    msg->nDID = NEXT_NEIGHBOUR_DEVICE_ID;
   } else {
     msg->nNID = NET_PREFIX;
     msg->nDID = DEVICE_ID;
@@ -151,11 +152,13 @@ void RTI::create_rti_message(message_t* msg, byte type, bool isCompleted) {
     msg->content[0] = RTI_MSG_MASK_RSS;
     for (int i = 1; i < (RTI_NEIGHBOUR_COUNT + 1); i++) {
       msg->content[i] = neighbour[i - 1].RSS;
+      neighbour[i - 1].RSS = 0;  // reset value
     }
     msg->content[RTI_NEIGHBOUR_COUNT + 1] = RTI_MSG_MASK_IR;
     for (int i = (RTI_NEIGHBOUR_COUNT + 2); i < (2 * RTI_NEIGHBOUR_COUNT + 2);
          i++) {
       msg->content[i] = neighbour[i - (RTI_NEIGHBOUR_COUNT + 2)].irRSS;
+      neighbour[i - (RTI_NEIGHBOUR_COUNT + 2)].irRSS = 0;  // reset value
     }
     msg->content[(2 * RTI_NEIGHBOUR_COUNT + 2)] = RTI_MSG_MASK_END;
     for (int i = 2 * RTI_NEIGHBOUR_COUNT + 3; i < MAX_CONTENT_SIZE; i++) {
@@ -169,11 +172,12 @@ void RTI::start_rti() {
   message_t* m = espC.get_outgoing();
   create_rti_message(m, MESSAGE_TYPE_BEACON, true);
   espC.send(m, sizeof(m));
-  // TODO Confirm reception of next node
 }
 #endif /*ROOT_NODE*/
 
 void RTI::routine() {
+  // reception of IR signal
+  irC.receive();
   if (espC.checkTimeout(RTI_TIMEOUT)) {
     // Next node does not tranmit assuming incorrect reception, repeat the last
     // message -> resend
@@ -190,12 +194,25 @@ void RTI::receive(message_t* incoming) {
     // Still no action
   }
   if (incoming->type == MESSAGE_TYPE_CONTENT) {
-    // record RSS from ESP-NOW
-    // conclude IR of the passing neighbours
+    // TODO set pointer record of IR, prepare to get IR RSS
   }
   if (incoming->nNID == NET_PREFIX &&
       incoming->nDID == DEVICE_ID) {  // if this node is the next sender
-    // send IR 
+    delay(1);
+    // send IR
     irC.send();
+    // send ESP-NOW and reset
+    message_t* m = espC.get_outgoing();
+    create_rti_message(m, MESSAGE_TYPE_CONTENT, true);
+    espC.send(m, sizeof(m));
   }
+}
+
+void RTI::report(int rssi) {
+  re("RTI - REPORT CALLBACK - RSSI BEFORE SET: ");
+  reln(neighbour[neighbourP].RSS);
+  neighbour[neighbourP].RSS = rssi;
+  outf("RSSI NEIGHBOUR: %02x%02x P:%02x RSSI:%02x",
+       neighbour[neighbourP].node.NID, neighbour[neighbourP].node.DID,
+       neighbourP, neighbour[neighbourP].RSS);
 }

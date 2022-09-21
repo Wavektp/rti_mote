@@ -59,6 +59,7 @@ typedef struct {
 
 typedef unsigned char byte;
 typedef void (*recv_cb_t)(message_t* incoming);
+typedef void (*report_cb_t)(int rssi);
 typedef struct {
   byte NID;
   byte DID;
@@ -78,9 +79,12 @@ class esp_comm;
 
 class esp_comm {
  private:
+  node_t cSender;
   confirmable_t conf;
   timestamp_t stamp;
+  int rssi;
   recv_cb_t recv_cb;
+  report_cb_t rep_cb;
 
   /// @brief Initialize WIFI and change MAC ADDRESS
   void customize_mac_address();
@@ -89,7 +93,7 @@ class esp_comm {
 
  public:
   /// @brief initialize communication module on esp
-  void begin(recv_cb_t recv_cb);
+  void begin(recv_cb_t recv_cb, report_cb_t rep_cb);
   /// @brief Broadcast msg via ESP-NOW
   /// @param pointer to message
   /// @param size of message
@@ -103,11 +107,13 @@ class esp_comm {
   bool checkTimeout(timestamp_t timeout);
   message_t* get_incoming();
   message_t* get_outgoing();
+  node_t* getCurrentSender();
   /******************************************************************************
    *  Callback Functions on Reception/Transmission *
    ******************************************************************************/
   void receive(const uint8_t* macAddr, const uint8_t* data, int len);
   void send_cb(const uint8_t* macAddr, esp_now_send_status_t st);
+  void promiscuous_rx_cb(void *buf, wifi_promiscuous_pkt_type_t type); 
 };
 
 #endif /*ESP_COMM_H*/

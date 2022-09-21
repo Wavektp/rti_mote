@@ -27,13 +27,15 @@
 /***********************************************************
  *              SERIAL_COM DEFINITION                      *
  ***********************************************************/
-#define out(x)        Serial.print(x)
-#define outf(x, y, z) Serial.printf(x, y, z)
-#define outln(x)      Serial.println(x)
+#define out(x)    Serial.print(x)
+#define outf(...) Serial.printf(__VA_ARGS__)
+#define outln(x)  Serial.println(x)
 #ifdef DEBUG_REPORT
-  #define re(x)   Serial.print(x)
-  #define reln(x) Serial.println(x)
+  #define re(x)    Serial.print(x)
+  #define ref(...) Serial.printf(__VA_ARGS__)
+  #define reln(x)  Serial.println(x)
 #else
-  #define re(x)   
-  #define reln(x) 
+  #define re(x)
+  #define ref(...)
+  #define reln(x)
 #endif /*DEBUG_REPORT*/

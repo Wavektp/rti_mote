@@ -4,7 +4,7 @@
 #include "esp_comm.h"
 #include "ir_comm.h"
 /************************************************************************
- *  RTI SCHEME DEFINITIONS                                           *
+ *  RTI SCHEME DEFINITIONS                                              *
  ************************************************************************/
 #define RTI_DEFAULT_SCHEME     0
 #define RTI_SIDEWAY_SCHEME     1
@@ -38,19 +38,24 @@
   #define RTI_NODE_COUNT /*Must be manually assigned*/
 #endif
 /************************************************************************
- *  RTI ROOT NODE DEFINITIONS                                           *
+ *  ROOT NODE DEFINITIONS                                               *
  ************************************************************************/
 #ifdef ROOT_NODE
   #define START_DELAY         2000
   #define RTI_NEIGHBOUR_COUNT RTI_NODE_COUNT
 #endif /*ROOT_NODE*/
 /************************************************************************
- *  RTI END DEVICE DEFINITIONS                                           *
+ *  NEIGHBOUR DEFINITION                                                *
  ************************************************************************/
-
 #define MAX_RTI_NEIGHBOUR 50
 #if RTI_NEIGHBOUR_COUNT > MAX_RTI_NEIGHBOUR
   #error NEIGHBOUR COUNT exceed max number
+#endif
+
+#define NEXT_NEIGHBOUR_NET_PREFIX NET_PREFIX
+#define NEXT_NEIGHBOUR_DEVICE_ID  DEVICE_ID + 1
+#if NEXT_NEIGHBOUR_DEVICE_ID > RTI_NODE_COUNT
+  #define NEXT_NEIGHBOUR_DEVICE_ID 0
 #endif
 
 typedef struct {
@@ -59,13 +64,13 @@ typedef struct {
   byte RSS = 0;
 } neighbour_t;
 
-typedef struct {
-  node_t neighbour[RTI_NEIGHBOUR_COUNT];
-} rti_info_t;
-
+/************************************************************************
+ *  RTI MESSAGE DEFINITION                                              *
+ ************************************************************************/
 #define RTI_MSG_MASK_RSS 0b10101010
 #define RTI_MSG_MASK_IR  0b01010101
 #define RTI_MSG_MASK_END 0b11001100
+#define RTI_MSG_DELAY    1
 
 #define RTI_PREFIX_STR_SIZE 38
 #define RTI_PREFIX_STR      "<T:%02x><ID:%02x><S:%02x%02x><R:%02x%02x><N:%02x%02x>\n"
@@ -74,10 +79,13 @@ typedef struct {
 #define RTI_IR_STR          "<N%02x: IR%02x>\n"
 #define RTI_IR_STR_SIZE     12
 #define RTI_STR_SIZE        250
-#define RTI_TIMEOUT 100
+#define RTI_TIMEOUT         100
+/************************************************************************
+ *  RTI CLASS                                                           *
+ ************************************************************************/
 class RTI {
  private:
-  node_t next;
+  byte neighbourP = 0;
   neighbour_t neighbour[RTI_NEIGHBOUR_COUNT];
   esp_comm espC;
   ir_comm irC;
@@ -91,5 +99,6 @@ class RTI {
   void create_rti_message(message_t* msg, byte type, bool isCompleted);
   void routine();
   void receive(message_t* incoming);
+  void report(int rssi);
 };
 #endif /*RTI_H*/

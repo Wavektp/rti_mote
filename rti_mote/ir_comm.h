@@ -15,10 +15,12 @@
 #define TONE_PIN        27  // D27 25 & 26 are DAC0 and 1
 #define APPLICATION_PIN 16  // RX2 pin
 
-#define IR_ADDRESS_16BIT   ((NET_PREFIX << 8) | DEVICE_ID)
+#define IR_ADDRESS_16BIT ((NET_PREFIX << 8) | DEVICE_ID)
 #define IR_ADDRESS_32BIT ((IR_ADDRESS_16BIT << 16) | IR_ADDRESS_16BIT)
-#define IR_CODE_EXAMPLE    0x34
-#define IR_REPETITION      0
+#define IR_CODE_EXAMPLE  0x34
+#define IR_REPETITION    0
+
+typedef unsigned char byte;
 
 /**
  * @brief The algorithm to send an IR signal and estimate RSS.
@@ -27,6 +29,8 @@ class ir_comm;
 
 class ir_comm {
  private:
+  byte* p_write;
+
  public:
   /**
    * @brief initialise IR communication with a specified TX PIN
@@ -34,8 +38,11 @@ class ir_comm {
    * @param txPin
    */
   void begin(unsigned int txPin);
+  /// @brief initialise IR communication
   void begin();
   void send();
   float rss();
+  void receive();
+  void set_p_write(byte* irRSS);
 };
 #endif /*IR_COMM_H*/
