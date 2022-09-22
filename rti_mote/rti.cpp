@@ -203,7 +203,12 @@ void RTI::receive(message_t* incoming) {
     irC.send();
     // send ESP-NOW and reset
     message_t* m = espC.get_outgoing();
+#ifdef END_DEVICE
     create_rti_message(m, MESSAGE_TYPE_CONTENT, true);
+#endif /*END_DEVICE*/
+#ifdef ROOT_NODE
+    create_rti_message(m, MESSAGE_TYPE_BEACON, true);
+#endif /*ROOT_NODE*/
     espC.send(m, sizeof(m));
   }
 }

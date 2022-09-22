@@ -66,8 +66,6 @@ void esp_comm::send(message_t* msg, size_t sz) {
   if (((msg->type) & MESSAGE_INCOMPLETE_FLAG) == 0x00) {
     conf.isObserve = true;
     conf.msg_sz = sz;
-    conf.expect.NID = msg->nNID;
-    conf.expect.DID = msg->nDID;
   }
 #ifdef ROOT_NODE
   if ((msg->type) == MESSAGE_TYPE_BEACON) {
@@ -118,8 +116,8 @@ void esp_comm::receive(const uint8_t* macAddr, const uint8_t* data, int len) {
     re("..on check:");
     if (conf.msg_id == incoming.msgID) {  // Check ID
       re("CORRECT ID..");
-      if ((conf.expect.NID == incoming.sNID) &&
-          (conf.expect.DID == incoming.sDID)) {  // Check sender
+      if ((incoming.sNID == NEXT_NEIGHBOUR_NET_PREFIX) &&
+          (incoming.sDID == NEXT_NEIGHBOUR_DEVICE_ID)) {  // Check sender
         reln("NEXT NEIGHBOUR CONFIRMED >> CONFIRMED RECEPTION");
         conf.isObserve = false;
       }

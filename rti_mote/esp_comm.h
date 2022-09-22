@@ -61,16 +61,22 @@ typedef unsigned char byte;
 typedef void (*recv_cb_t)(message_t* incoming);
 typedef void (*report_cb_t)(int rssi);
 typedef struct {
-  byte NID;
+  byte NID = NET_PREFIX;
   byte DID;
 } node_t;
 
 typedef struct {
   bool isObserve;
-  node_t expect;
   byte msg_id;
   size_t msg_sz;
 } confirmable_t;
+
+
+#define NEXT_NEIGHBOUR_NET_PREFIX NET_PREFIX
+#define NEXT_NEIGHBOUR_DEVICE_ID  DEVICE_ID + 1
+#if NEXT_NEIGHBOUR_DEVICE_ID > RTI_NODE_COUNT
+  #define NEXT_NEIGHBOUR_DEVICE_ID 0
+#endif
 
 typedef unsigned char timestamp_t;
 

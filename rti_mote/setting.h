@@ -31,9 +31,9 @@
 #define outf(...) Serial.printf(__VA_ARGS__)
 #define outln(x)  Serial.println(x)
 #ifdef DEBUG_REPORT
-  #define re(x)    Serial.print(x)
-  #define ref(...) Serial.printf(__VA_ARGS__)
-  #define reln(x)  Serial.println(x)
+  #define re(x)     Serial.print(x)
+  #define repf(...) Serial.printf(__VA_ARGS__)
+  #define reln(x)   Serial.println(x)
 #else
   #define re(x)
   #define ref(...)
