@@ -52,12 +52,6 @@
   #error NEIGHBOUR COUNT exceed max number
 #endif
 
-#define NEXT_NEIGHBOUR_NET_PREFIX NET_PREFIX
-#define NEXT_NEIGHBOUR_DEVICE_ID  DEVICE_ID + 1
-#if NEXT_NEIGHBOUR_DEVICE_ID > RTI_NODE_COUNT
-  #define NEXT_NEIGHBOUR_DEVICE_ID 0
-#endif
-
 typedef struct {
   node_t node;
   byte irRSS = 0;
