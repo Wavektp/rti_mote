@@ -12,7 +12,7 @@
 /***********************************************************
  *                  RTI SETTING                            *
  ***********************************************************/
-#define RTI_NODE_COUNT 10
+#define RTI_NODE_COUNT 12
 #if DEVICE_ID > RTI_NODE_COUNT
   #error DEVICE_ID must be in range of NODE COUNT
 #endif /*DEVICE_ID > RTI_NODE_COUNT*/
@@ -40,15 +40,18 @@
     #define verf(...) Serial.printf(__VA_ARGS__)
     #define verln(x)  Serial.println(x)
   #else
-    #define ver(x)    
-    #define verf(...) 
-    #define verln(x)  
+    #define ver(x)
+    #define verf(...)
+    #define verln(x)
   #endif /*VERBOSE_REPORT*/
 #else
   #define re(x)
   #define ref(...)
   #define reln(x)
-  #define ver(x)    
-  #define verf(...) 
-  #define verln(x)  
+  #define ver(x)
+  #define verf(...)
+  #define verln(x)
 #endif /*DEBUG_REPORT*/
+#define CLEARFLAG(B, F) B &= ~F
+#define SETFLAG(B, F)   B |= F
+#define CHECKFLAG(B, F) (B & F)

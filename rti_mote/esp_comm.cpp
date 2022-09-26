@@ -148,7 +148,7 @@ void esp_comm::promiscuous_rx_cb(void* buf, wifi_promiscuous_pkt_type_t type) {
   re("WIFI CALLBACK: Retrieving RSSI: ");
   rssi = ppkt->rx_ctrl.rssi;
   reln(rssi);
-  rep_cb(rssi);
+  rep_cb((byte)rssi);
 }
 
 node_t* esp_comm::getCurrentSender() {

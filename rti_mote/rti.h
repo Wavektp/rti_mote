@@ -82,8 +82,10 @@ typedef struct {
 typedef unsigned char rti_position_scheme_t;
 
 typedef struct {
+  volatile bool isNeighbourExist = false;
   volatile uint8_t neighbourP = 0;
-  volatile int tempRSSI = 0;
+  volatile byte tempRSSI = 0;
+  byte tempIR = 0;
   rti_position_scheme_t pos = 0;
   neighbour_t neighbour[RTI_NEIGHBOUR_COUNT];
 } rti_info_t;
@@ -94,10 +96,9 @@ class RTI {
   esp_comm espC;
   ir_comm irC;
   /**
-   * @brief Read current sender and check whether
-   *
+   * @brief Read current sender and check whether neighbour exist at which index
    */
-  void checkNeighbourP();
+  bool checkNeighbourP();
 
  public:
 #if defined(ROOT_NODE)
@@ -108,6 +109,6 @@ class RTI {
   void create_rti_message(message_t* msg, byte type, bool isCompleted);
   void routine();
   void receive(message_t* incoming);
-  void report(int rssi);
+  void report(byte rssi);
 };
 #endif /*RTI_H*/

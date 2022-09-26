@@ -194,16 +194,26 @@ void RTI::receive(message_t* incoming) {
   // copy data to incoming message
   re("RTI CALLBACK: ");
   if (incoming->type == MESSAGE_TYPE_BEACON) {
+    re("BEACON received:");
     // Still no action
   }
   if (incoming->type == MESSAGE_TYPE_CONTENT) {
 #if defined(ROOT_NODE)
+    re("CONTENT received:");
     char outStr[RTI_STR_SIZE];
     msgToStr(incoming, outStr);
     outln(outStr);
 #endif
 #if defined(END_DEVICE)
-    void checkNeighbourP();
+    re("CONTENT received:");
+    if (checkNeighbourP()) {
+      info.neighbour[info.neighbourP].RSS = info.tempRSSI;
+      irC.set_p_write(&info.neighbour[info.neighbourP].RSS);
+      repf("Set IR Pointer to NEIGHBOUR %02x \n", info.neighbourP);
+    } else {
+      reln("Set IR Pointer to NEIGHBOUR TEMP");
+      irC.set_p_write(&info.tempIR);
+    }
 #endif
   }
   if (incoming->nNID == NET_PREFIX &&
@@ -223,15 +233,18 @@ void RTI::receive(message_t* incoming) {
   }
 }
 
-void RTI::report(int rssi) {
-  re("RTI - REPORT CALLBACK - RSSI BEFORE SET: ");
-  reln(info.neighbour[info.neighbourP].RSS);
-  info.neighbour[info.neighbourP].RSS = rssi;
-  outf("RSSI NEIGHBOUR: %02x%02x P:%02x RSSI:%02x",
-       info.neighbour[info.neighbourP].node.NID,
-       info.neighbour[info.neighbourP].node.DID, info.neighbourP,
-       info.neighbour[info.neighbourP].RSS);
+void RTI::report(byte rssi) {
+  re("RTI - REPORT CALLBACK");
   info.tempRSSI = rssi;
+  if (info.isNeighbourExist) {
+    re("RSSI BEFORE SET: ");
+    reln(info.neighbour[info.neighbourP].RSS);
+    info.neighbour[info.neighbourP].RSS = rssi;
+    outf("RSSI NEIGHBOUR: %02x%02x P:%02x RSSI:%02x",
+         info.neighbour[info.neighbourP].node.NID,
+         info.neighbour[info.neighbourP].node.DID, info.neighbourP,
+         info.neighbour[info.neighbourP].RSS);
+  }
 }
 
 #if defined(RTI_DEFAULT_SCHEME)
@@ -241,14 +254,34 @@ void RTI::checkNeighbourP() {
 }
 #endif /*RTI_DEFAULT_SCHEME*/
 #if defined(RTI_SIDEWAY_SCHEME)
-void RTI::checkNeighbourP() {
+bool RTI::checkNeighbourP() {
+  info.neighbourP = RTI_NEIGHBOUR_COUNT;
+  info.isNeighbourExist = false;
+  re("CHECK NEIGHBOUR: SIDEWAY SCHEME:");
   // get currect sender from communication module
   node_t* cS = espC.getCurrentSender();
   if (ODD_SIDE_FLAG) {
-    info.neighbourP = cS->DID / 2;
+    if (cS->DID % 2)
+      return false;
+    reln("Neighbour on Even Side");
+    byte nID = ((cS->DID / 2) - 1);
+    if (nID >= RTI_NEIGHBOUR_COUNT)
+      return false;
+    info.neighbourP = nID;
+    info.isNeighbourExist = true;
+    return true;
   } else {
-    info.neighbourP = cS->NID / 3;
+    if (cS->DID % 2 == 0)
+      return false;
+    reln("Neighbour on Odd Side");
+    byte nID = cS->NID / 2;
+    if (nID >= RTI_NEIGHBOUR_COUNT)
+      return false;
+    info.neighbourP = nID;
+    info.isNeighbourExist = true;
+    return true;
   }
+  repf("SET NEIGHBOUR POINTER:%02x", info.neighbourP);
 }
 #endif /*RTI_SIDEWAY_POSITION*/
 #if defined(RTI_RECTANGULAR_SCHEME)
