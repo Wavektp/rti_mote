@@ -1,5 +1,23 @@
 #include "esp_comm.h"
 
+node_t cSender;
+confirmable_t conf;
+timestamp_t stamp;
+recv_cb_t recv_cb;
+report_cb_t rep_cb;
+
+message_t incoming;
+message_t outgoing;
+
+/******************************************************************************
+ *  Callback Functions on Reception/Transmission *
+ ******************************************************************************/
+void receive(const uint8_t* macAddr, const uint8_t* data, int len);
+void send_cb(const uint8_t* macAddr, esp_now_send_status_t st);
+void promiscuous_rx_cb(void* buf, wifi_promiscuous_pkt_type_t type);
+
+bool checkNeighbourP();
+
 #if defined(ROOT_NODE)
 byte msgID = 0;
 #endif /*ROOT_NODE*/
@@ -7,20 +25,17 @@ byte msgID = 0;
 const uint8_t brcst_addr[] = BROADCAST_MAC_ADDRESS;
 uint8_t device_mac_addr[] = DEVICE_MAC_ADDRESS;
 
-message_t incoming;
-message_t outgoing;
-
 void esp_comm::begin(recv_cb_t recv, report_cb_t rep) {
   // Enable Serial
 
   Serial.begin(SERIAL_BAUDRATE);
   while (!Serial) {
   }
-  // Enable WiFi and change MAC ADDRESS
+  outln("... initialize ESP-NOW");
+// Enable WiFi and change MAC ADDRESS
   customize_mac_address();
   initESPNow();
-  outln("... initialize ESP-NOW");
-
+  
   recv_cb = recv;
   rep_cb = rep;
 }
@@ -46,8 +61,8 @@ void esp_comm::initESPNow() {
     ESP.restart();
   }
   // register callbacks
-  esp_now_register_send_cb((esp_now_send_cb_t)&esp_comm::send_cb);
-  esp_now_register_recv_cb((esp_now_recv_cb_t)&esp_comm::receive);
+  esp_now_register_send_cb(&send_cb);
+  esp_now_register_recv_cb(&receive);
   // add peer
   esp_now_peer_info_t peer_info = {};
   memcpy(&peer_info.peer_addr, brcst_addr, MAC_ADDR_SIZE);
@@ -57,19 +72,18 @@ void esp_comm::initESPNow() {
     }
   }
   esp_wifi_set_promiscuous(true);
-  esp_wifi_set_promiscuous_rx_cb(
-      (wifi_promiscuous_cb_t)&esp_comm::promiscuous_rx_cb);
+  esp_wifi_set_promiscuous_rx_cb(&promiscuous_rx_cb);
 }
 
-void esp_comm::send(message_t* msg, size_t sz) {
+void esp_comm::send() {
   // send message
-  if (((msg->type) & MESSAGE_INCOMPLETE_FLAG) == 0x00) {
+  if (((outgoing.type) & MESSAGE_INCOMPLETE_FLAG) == 0x00) {
     conf.isObserve = true;
-    conf.msg_sz = sz;
+    conf.msg_sz = sizeof(outgoing);
   }
 #if defined(ROOT_NODE)
-  if ((msg->type) == MESSAGE_TYPE_BEACON) {
-    msg->msgID = msgID++;
+  if ((outgoing.type) == MESSAGE_TYPE_BEACON) {
+    outgoing.msgID = msgID++;
   }
 #endif /*ROOT_NODE*/
 #if defined(END_DEVICE)
@@ -77,12 +91,30 @@ void esp_comm::send(message_t* msg, size_t sz) {
     msg->msgID = conf.msg_id;
   }
 #endif /*END_DEVICE*/
-  timestamp_t stamp = millis();
-  esp_err_t res = esp_now_send(brcst_addr, (uint8_t*)msg, sz);
+  stamp = millis();
+  esp_err_t res =
+      esp_now_send(brcst_addr, (uint8_t*)&outgoing, sizeof(outgoing));
+  Serial.print("\r\ESP_NOW Sent Status: ");
+  if (res == ESP_OK) {
+    Serial.println("SUCCESS");
+  } else if (res == ESP_ERR_ESPNOW_NOT_INIT) {
+    // How did we get so far!!
+    Serial.println("ESPNOW not Init.");
+  } else if (res == ESP_ERR_ESPNOW_ARG) {
+    Serial.println("Invalid Argument");
+  } else if (res == ESP_ERR_ESPNOW_INTERNAL) {
+    Serial.println("Internal Error");
+  } else if (res == ESP_ERR_ESPNOW_NO_MEM) {
+    Serial.println("ESP_ERR_ESPNOW_NO_MEM");
+  } else if (res == ESP_ERR_ESPNOW_NOT_FOUND) {
+    Serial.println("Peer not found.");
+  } else {
+    Serial.println("Not sure what happened");
+  }
 }
 
 void esp_comm::resend() {
-  send(&outgoing, conf.msg_sz);
+  send();
 }
 
 void esp_comm::macAddrToStr(const uint8_t* macAddr, char* str, int len) {
@@ -104,7 +136,7 @@ message_t* esp_comm::get_outgoing() {
   return &outgoing;
 }
 
-void esp_comm::receive(const uint8_t* macAddr, const uint8_t* data, int len) {
+void receive(const uint8_t* macAddr, const uint8_t* data, int len) {
   // reset watchdog
   esp_task_wdt_reset();
   // copy data to incoming message
@@ -133,22 +165,21 @@ void esp_comm::receive(const uint8_t* macAddr, const uint8_t* data, int len) {
   // // check functionality
 }
 
-void esp_comm::send_cb(const uint8_t* macAddr, esp_now_send_status_t st) {
-  out("\r\n ESP-NOW Sent: ");
-  outln(st == ESP_NOW_SEND_SUCCESS ? "SUCCESS" : "FAILED");
+void send_cb(const uint8_t* macAddr, esp_now_send_status_t st) {
+  // out("\r\nESP-NOW Sent: ");
+  // outln(st == ESP_NOW_SEND_SUCCESS ? "SUCCESS\n" : "FAILED\n");
 }
 
-void esp_comm::promiscuous_rx_cb(void* buf, wifi_promiscuous_pkt_type_t type) {
+void promiscuous_rx_cb(void* buf, wifi_promiscuous_pkt_type_t type) {
   // All espnow traffic uses action frames which are a subtype of the mgmnt
   // frames so filter out everything else.
   if (type != WIFI_PKT_MGMT)
     return;
 
   const wifi_promiscuous_pkt_t* ppkt = (wifi_promiscuous_pkt_t*)buf;
-  re("WIFI CALLBACK: Retrieving RSSI: ");
-  rssi = ppkt->rx_ctrl.rssi;
-  reln(rssi);
-  rep_cb((byte)rssi);
+  int rssi = ppkt->rx_ctrl.rssi;
+  repf("WIFI CALLBACK: Retrieving RSSI: %02d, ", rssi);
+  rep_cb(rssi);
 }
 
 node_t* esp_comm::getCurrentSender() {

@@ -2,17 +2,18 @@
  *                  DEVICE SETTING                         *
  ***********************************************************/
 #define NET_PREFIX 0x10
-#define DEVICE_ID  1
+#define DEVICE_ID  0
 #if (DEVICE_ID == 0)
   #define ROOT_NODE  // ROOT NODE
 #else
   #define END_DEVICE  // END DEVICE
 #endif
-#define RESET_TIMEOUT 1000
+#define RESET_TIMEOUT 10000
+#define RTI_TIMEOUT   2000
 /***********************************************************
  *                  RTI SETTING                            *
  ***********************************************************/
-#define RTI_NODE_COUNT 12
+#define RTI_NODE_COUNT 2
 #if DEVICE_ID > RTI_NODE_COUNT
   #error DEVICE_ID must be in range of NODE COUNT
 #endif /*DEVICE_ID > RTI_NODE_COUNT*/

@@ -40,7 +40,7 @@
 #define MESSAGE_TYPE_CONTENT 0x01
 
 #define MESSAGE_INCOMPLETE_FLAG 0x08
-#define MAX_CONTENT_SIZE        220
+#define MAX_CONTENT_SIZE        50
 
 /// @brief frame format for RTI node exchanges
 typedef struct {
@@ -54,7 +54,7 @@ typedef struct {
   byte nNID;
   byte nDID;
   size_t len;
-  byte content[MAX_CONTENT_SIZE];
+  int content[MAX_CONTENT_SIZE];
 } message_t;
 
 typedef unsigned char byte;
@@ -66,7 +66,7 @@ typedef struct {
 } node_t;
 
 typedef struct {
-  bool isObserve;
+  bool isObserve = false;
   byte msg_id;
   size_t msg_sz;
 } confirmable_t;
@@ -78,20 +78,13 @@ typedef struct {
   #define NEXT_NEIGHBOUR_DEVICE_ID 0
 #endif
 
-typedef unsigned char timestamp_t;
+typedef unsigned long timestamp_t;
 
 /// @brief Class for managing ESP-NOW
 class esp_comm;
 
 class esp_comm {
  private:
-  node_t cSender;
-  confirmable_t conf;
-  timestamp_t stamp;
-  int rssi;
-  recv_cb_t recv_cb;
-  report_cb_t rep_cb;
-
   /// @brief Initialize WIFI and change MAC ADDRESS
   void customize_mac_address();
   /// @brief Initialize ESP-NOW
@@ -103,7 +96,7 @@ class esp_comm {
   /// @brief Broadcast msg via ESP-NOW
   /// @param pointer to message
   /// @param size of message
-  void send(message_t* msg, size_t sz);
+  void send();
   void resend();
   /// @brief write MAC ADDRESS as string
   /// @param macAddr MAC ADDRESS
@@ -114,12 +107,6 @@ class esp_comm {
   message_t* get_incoming();
   message_t* get_outgoing();
   node_t* getCurrentSender();
-  /******************************************************************************
-   *  Callback Functions on Reception/Transmission *
-   ******************************************************************************/
-  void receive(const uint8_t* macAddr, const uint8_t* data, int len);
-  void send_cb(const uint8_t* macAddr, esp_now_send_status_t st);
-  void promiscuous_rx_cb(void *buf, wifi_promiscuous_pkt_type_t type); 
 };
 
 #endif /*ESP_COMM_H*/

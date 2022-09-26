@@ -56,8 +56,8 @@
 
 typedef struct {
   node_t node;
-  byte irRSS = 0;
-  byte RSS = 0;
+  int irRSS = 0;
+  int RSS = 0;
 } neighbour_t;
 
 /************************************************************************
@@ -75,7 +75,6 @@ typedef struct {
 #define RTI_IR_STR          "<N%02x: IR%02x>\n"
 #define RTI_IR_STR_SIZE     12
 #define RTI_STR_SIZE        250
-#define RTI_TIMEOUT         100
 /************************************************************************
  *  RTI CLASS                                                           *
  ************************************************************************/
@@ -84,7 +83,7 @@ typedef unsigned char rti_position_scheme_t;
 typedef struct {
   volatile bool isNeighbourExist = false;
   volatile uint8_t neighbourP = 0;
-  volatile byte tempRSSI = 0;
+  int tempRSSI = 0;
   byte tempIR = 0;
   rti_position_scheme_t pos = 0;
   neighbour_t neighbour[RTI_NEIGHBOUR_COUNT];
@@ -92,9 +91,6 @@ typedef struct {
 
 class RTI {
  private:
-  rti_info_t info;
-  esp_comm espC;
-  ir_comm irC;
   /**
    * @brief Read current sender and check whether neighbour exist at which index
    */
@@ -105,10 +101,6 @@ class RTI {
   void start_rti();
 #endif /*ROOT_NODE*/
   void begin();
-  void msgToStr(message_t* msg, char* str);
-  void create_rti_message(message_t* msg, byte type, bool isCompleted);
   void routine();
-  void receive(message_t* incoming);
-  void report(byte rssi);
 };
 #endif /*RTI_H*/

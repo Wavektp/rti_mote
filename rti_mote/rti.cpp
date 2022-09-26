@@ -1,10 +1,23 @@
 #include "rti.h"
 
-void start_rti();
+rti_info_t info;
+esp_comm espC;
+ir_comm irC;
+
+void msgToStr(message_t* msg, char* str);
+void create_rti_message(message_t* msg, byte type, bool isCompleted);
+void receive(message_t* incoming);
+void report(int rssi);
 
 void RTI::begin() {
-  espC.begin((recv_cb_t)&RTI::receive, (report_cb_t)&RTI::report);
-  irC.begin(IR_SEND_PIN);
+  // Set watchdog timer
+  outln("...Initialize watchdog");
+  out("RESET TIMEOUT: ");
+  outln(RESET_TIMEOUT);
+  esp_task_wdt_init(RESET_TIMEOUT, true);
+  esp_task_wdt_add(NULL);
+
+  espC.begin((recv_cb_t)&receive, (report_cb_t)&report);
   outln("... initialize RTI Protocols");
 
   out("DEVICE ID: ");
@@ -16,14 +29,8 @@ void RTI::begin() {
   out("\r\nNODE COUNT: ");
   outln(RTI_NODE_COUNT);
 
-  // next.NID = NET_PREFIX;
-  // byte dID = DEVICE_ID + 1;
-  // if (dID <= RTI_NODE_COUNT) {
-  //   next.DID = dID;
-  // } else {
-  //   next.DID = 0;
-  // }
 #if defined(END_DEVICE)
+  irC.begin(IR_SEND_PIN);
   #if defined(RTI_DEFAULT_SCHEME)
   outln("DEFAULT SCHEME");
   for (int i = 0; i < RTI_NEIGHBOUR_COUNT; i++) {
@@ -75,7 +82,7 @@ void RTI::begin() {
   out("NEIGHBOUR COUNT: ");
   outln(RTI_NEIGHBOUR_COUNT);
 #endif /*END_DEVICE*/
-  outf("NEXT NEIGHBOUR: N%02x%02x", NEXT_NEIGHBOUR_NET_PREFIX,
+  outf("NEXT NEIGHBOUR: N%02x%02x \n", NEXT_NEIGHBOUR_NET_PREFIX,
        NEXT_NEIGHBOUR_DEVICE_ID);
 
 #if defined(ROOT_NODE)
@@ -84,15 +91,9 @@ void RTI::begin() {
   outln("...Sending BEACON");
   start_rti();
 #endif /*ROOT_NODE*/
-  // Set watchdog timer
-  outln("...Initialize watchdog");
-  out("RESET TIMEOUT: ");
-  outln(RESET_TIMEOUT);
-  esp_task_wdt_init(RESET_TIMEOUT, true);
-  esp_task_wdt_add(NULL);
 }
 
-void RTI::msgToStr(message_t* msg, char* str) {
+void msgToStr(message_t* msg, char* str) {
   char st[RTI_STR_SIZE];
   sniprintf(st, RTI_PREFIX_STR_SIZE, RTI_PREFIX_STR, msg->type, msg->msgID,
             msg->sNID, msg->sDID, msg->rNID, msg->rDID, msg->nNID, msg->nDID);
@@ -129,8 +130,9 @@ void RTI::msgToStr(message_t* msg, char* str) {
   strcpy(str, st);
 }
 
-void RTI::create_rti_message(message_t* msg, byte type, bool isCompleted) {
+void create_rti_message(message_t* msg, byte type, bool isCompleted) {
   /*create message prefix*/
+  re("CREATE MESSAGE: ");
   msg->type = type;
   msg->sNID = NET_PREFIX;
   msg->sDID = DEVICE_ID;
@@ -145,6 +147,7 @@ void RTI::create_rti_message(message_t* msg, byte type, bool isCompleted) {
   }
 #if defined(ROOT_NODE)
   if (type == MESSAGE_TYPE_BEACON) {
+    reln("BEACON");
     msg->len = 0;
     for (int i = 0; i < MAX_CONTENT_SIZE; i++) {
       msg->content[i] = 0;
@@ -176,13 +179,15 @@ void RTI::create_rti_message(message_t* msg, byte type, bool isCompleted) {
 void RTI::start_rti() {
   message_t* m = espC.get_outgoing();
   create_rti_message(m, MESSAGE_TYPE_BEACON, true);
-  espC.send(m, sizeof(m));
+  espC.send();
 }
 #endif /*ROOT_NODE*/
 
 void RTI::routine() {
+#if defined(END_DEVICE)
   // reception of IR signal
   irC.receive();
+#endif /*END_DEVICE*/
   if (espC.checkTimeout(RTI_TIMEOUT)) {
     // Next node does not tranmit assuming incorrect reception, repeat the last
     // message -> resend
@@ -190,11 +195,11 @@ void RTI::routine() {
   }
 }
 
-void RTI::receive(message_t* incoming) {
+void receive(message_t* incoming) {
   // copy data to incoming message
   re("RTI CALLBACK: ");
   if (incoming->type == MESSAGE_TYPE_BEACON) {
-    re("BEACON received:");
+    re("BEACON received \n");
     // Still no action
   }
   if (incoming->type == MESSAGE_TYPE_CONTENT) {
@@ -229,13 +234,13 @@ void RTI::receive(message_t* incoming) {
 #if defined(ROOT_NODE)
     create_rti_message(m, MESSAGE_TYPE_BEACON, true);
 #endif /*ROOT_NODE*/
-    espC.send(m, sizeof(m));
+    espC.send();
   }
 }
 
-void RTI::report(byte rssi) {
-  re("RTI - REPORT CALLBACK");
+void report(int rssi) {
   info.tempRSSI = rssi;
+  repf("RTI - REPORT CALLBACK SET TEMP RSSI:  %02d \n", info.tempRSSI);
   if (info.isNeighbourExist) {
     re("RSSI BEFORE SET: ");
     reln(info.neighbour[info.neighbourP].RSS);
@@ -260,6 +265,8 @@ bool RTI::checkNeighbourP() {
   re("CHECK NEIGHBOUR: SIDEWAY SCHEME:");
   // get currect sender from communication module
   node_t* cS = espC.getCurrentSender();
+  if (cS->DID == 0)
+    return false;
   if (ODD_SIDE_FLAG) {
     if (cS->DID % 2)
       return false;
