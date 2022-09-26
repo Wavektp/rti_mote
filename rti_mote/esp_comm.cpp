@@ -87,8 +87,8 @@ void esp_comm::send() {
   }
 #endif /*ROOT_NODE*/
 #if defined(END_DEVICE)
-  if ((msg->type) == MESSAGE_TYPE_CONTENT) {
-    msg->msgID = conf.msg_id;
+  if ((outgoing.type) == MESSAGE_TYPE_CONTENT) {
+    outgoing.msgID = conf.msg_id;
   }
 #endif /*END_DEVICE*/
   stamp = millis();
