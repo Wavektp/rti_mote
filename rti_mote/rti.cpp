@@ -23,8 +23,8 @@ void RTI::begin() {
   // } else {
   //   next.DID = 0;
   // }
-#ifdef END_DEVICE
-  #if RTI_SCHEME == RTI_DEFAULT_SCHEME
+#if defined(END_DEVICE)
+  #if defined(RTI_DEFAULT_SCHEME)
   outln("DEFAULT SCHEME");
   for (int i = 0; i < RTI_NEIGHBOUR_COUNT; i++) {
     neighbour[i].node.NID = NET_PREFIX;
@@ -34,37 +34,42 @@ void RTI::begin() {
       neighbour[i].node.DID = (i + 2);
     }
   }
-  #endif /*RTI_SCHEME == RTI_DEFAULT_SCHEME*/
-  #if RTI_SCHEME == RTI_SIDEWAY_SCHEME
-  outln("SIDEWAY SCHEME");
+  #endif /*RTI_DEFAULT_SCHEME*/
+  #if defined(RTI_SIDEWAY_SCHEME)
+  out("SIDEWAY SCHEME:");
+  outf("DEVICE ID: %02x \n", DEVICE_ID);
+  if (DEVICE_ID % 2) {
+    re("-> ODD SIDE detected");
+    info.pos |= ODD_SIDE_FLAG;
+  }
   bool isEven = (DEVICE_ID % 2 == 0);
   for (int i = 0; i < RTI_NEIGHBOUR_COUNT; i++) {
     byte dID = (2 * i + 1);
     if (!isEven) {
       dID += 1;
     }
-    neighbour[i].node.NID = NET_PREFIX;
-    neighbour[i].node.DID = dID;
-    neighbour[i].RSS = 0;
-    neighbour[i].irRSS = 0;
+    info.neighbour[i].node.NID = NET_PREFIX;
+    info.neighbour[i].node.DID = dID;
+    info.neighbour[i].RSS = 0;
+    info.neighbour[i].irRSS = 0;
   }
 
-  #endif /*RTI_SCHEME == RTI_SIDEWAY_SCHEME*/
+  #endif /*RTI_SIDEWAY_SCHEME*/
   outln("RECTANGULAR SCHEME");
-  #if RTI_SCHEME == RTI_RECTANGULAR_SCHEME
+  #if defined(RTI_RECTANGULAR_SCHEME)
   for (int i = 0; i < RTI_NEIGHBOUR_COUNT; i++) {
-    neighbour[i].node.NID = NET_PREFIX;
+    info.neighbour[i].node.NID = NET_PREFIX;
     byte dID = i + (RECTANGULAR_SIDE * SIDE_NODE_COUNT + 2);
-    neighbour[i].node.DID = dID;
+    info.neighbour[i].node.DID = dID;
     if (dID <= RTI_NODE_COUNT) {
-      neighbour[i].node.DID = dID;
+      info.neighbour[i].node.DID = dID;
     } else {
-      neighbour[i].node.DID = dID - RECTANGULAR_SIDE * SIDE_NODE_COUNT;
+      info.neighbour[i].node.DID = dID - RECTANGULAR_SIDE * SIDE_NODE_COUNT;
     }
   }
-  #endif /*RTI_SIDEWAY_SCHEME == RTI_RECTANGULAR_SCHEME*/
+  #endif /*RTI_RECTANGULAR_SCHEME*/
   outln("CUSTOM SCHEME");
-  #if RTI_SCHEME == RTI_CUSTOM_SCHEME
+  #if defined(RTI_CUSTOM_SCHEME)
     #error In CUSTOM SCHEME, neighbours need to be manually defined
   #endif
   out("NEIGHBOUR COUNT: ");
@@ -73,7 +78,7 @@ void RTI::begin() {
   outf("NEXT NEIGHBOUR: N%02x%02x", NEXT_NEIGHBOUR_NET_PREFIX,
        NEXT_NEIGHBOUR_DEVICE_ID);
 
-#ifdef ROOT_NODE
+#if defined(ROOT_NODE)
   outln("-------- ROOT NODE --------");
   delay(START_DELAY);
   outln("...Sending BEACON");
@@ -138,7 +143,7 @@ void RTI::create_rti_message(message_t* msg, byte type, bool isCompleted) {
     msg->nNID = NET_PREFIX;
     msg->nDID = DEVICE_ID;
   }
-#ifdef ROOT_NODE
+#if defined(ROOT_NODE)
   if (type == MESSAGE_TYPE_BEACON) {
     msg->len = 0;
     for (int i = 0; i < MAX_CONTENT_SIZE; i++) {
@@ -146,19 +151,19 @@ void RTI::create_rti_message(message_t* msg, byte type, bool isCompleted) {
     }
   }
 #endif /*ROOT_NODE*/
-#ifdef END_DEVICE
+#if defined(END_DEVICE)
   if (type == MESSAGE_TYPE_CONTENT) {
     msg->len = 2 * RTI_NEIGHBOUR_COUNT + 2;
     msg->content[0] = RTI_MSG_MASK_RSS;
     for (int i = 1; i < (RTI_NEIGHBOUR_COUNT + 1); i++) {
-      msg->content[i] = neighbour[i - 1].RSS;
-      neighbour[i - 1].RSS = 0;  // reset value
+      msg->content[i] = info.neighbour[i - 1].RSS;
+      info.neighbour[i - 1].RSS = 0;  // reset value
     }
     msg->content[RTI_NEIGHBOUR_COUNT + 1] = RTI_MSG_MASK_IR;
     for (int i = (RTI_NEIGHBOUR_COUNT + 2); i < (2 * RTI_NEIGHBOUR_COUNT + 2);
          i++) {
-      msg->content[i] = neighbour[i - (RTI_NEIGHBOUR_COUNT + 2)].irRSS;
-      neighbour[i - (RTI_NEIGHBOUR_COUNT + 2)].irRSS = 0;  // reset value
+      msg->content[i] = info.neighbour[i - (RTI_NEIGHBOUR_COUNT + 2)].irRSS;
+      info.neighbour[i - (RTI_NEIGHBOUR_COUNT + 2)].irRSS = 0;  // reset value
     }
     msg->content[(2 * RTI_NEIGHBOUR_COUNT + 2)] = RTI_MSG_MASK_END;
     for (int i = 2 * RTI_NEIGHBOUR_COUNT + 3; i < MAX_CONTENT_SIZE; i++) {
@@ -167,7 +172,7 @@ void RTI::create_rti_message(message_t* msg, byte type, bool isCompleted) {
   }
 #endif /*END_DEVICE*/
 }
-#ifdef ROOT_NODE
+#if defined(ROOT_NODE)
 void RTI::start_rti() {
   message_t* m = espC.get_outgoing();
   create_rti_message(m, MESSAGE_TYPE_BEACON, true);
@@ -186,15 +191,20 @@ void RTI::routine() {
 }
 
 void RTI::receive(message_t* incoming) {
-  char outStr[RTI_STR_SIZE];
-  msgToStr(incoming, outStr);
   // copy data to incoming message
   re("RTI CALLBACK: ");
   if (incoming->type == MESSAGE_TYPE_BEACON) {
     // Still no action
   }
   if (incoming->type == MESSAGE_TYPE_CONTENT) {
-    // TODO set pointer record of IR, prepare to get IR RSS
+#if defined(ROOT_NODE)
+    char outStr[RTI_STR_SIZE];
+    msgToStr(incoming, outStr);
+    outln(outStr);
+#endif
+#if defined(END_DEVICE)
+    void checkNeighbourP();
+#endif
   }
   if (incoming->nNID == NET_PREFIX &&
       incoming->nDID == DEVICE_ID) {  // if this node is the next sender
@@ -203,10 +213,10 @@ void RTI::receive(message_t* incoming) {
     irC.send();
     // send ESP-NOW and reset
     message_t* m = espC.get_outgoing();
-#ifdef END_DEVICE
+#if defined(END_DEVICE)
     create_rti_message(m, MESSAGE_TYPE_CONTENT, true);
 #endif /*END_DEVICE*/
-#ifdef ROOT_NODE
+#if defined(ROOT_NODE)
     create_rti_message(m, MESSAGE_TYPE_BEACON, true);
 #endif /*ROOT_NODE*/
     espC.send(m, sizeof(m));
@@ -215,9 +225,41 @@ void RTI::receive(message_t* incoming) {
 
 void RTI::report(int rssi) {
   re("RTI - REPORT CALLBACK - RSSI BEFORE SET: ");
-  reln(neighbour[neighbourP].RSS);
-  neighbour[neighbourP].RSS = rssi;
+  reln(info.neighbour[info.neighbourP].RSS);
+  info.neighbour[info.neighbourP].RSS = rssi;
   outf("RSSI NEIGHBOUR: %02x%02x P:%02x RSSI:%02x",
-       neighbour[neighbourP].node.NID, neighbour[neighbourP].node.DID,
-       neighbourP, neighbour[neighbourP].RSS);
+       info.neighbour[info.neighbourP].node.NID,
+       info.neighbour[info.neighbourP].node.DID, info.neighbourP,
+       info.neighbour[info.neighbourP].RSS);
+  info.tempRSSI = rssi;
 }
+
+#if defined(RTI_DEFAULT_SCHEME)
+void RTI::checkNeighbourP() {
+  // get currect sender from communication module
+  node_t* cS = espC.getCurrentSender();
+}
+#endif /*RTI_DEFAULT_SCHEME*/
+#if defined(RTI_SIDEWAY_SCHEME)
+void RTI::checkNeighbourP() {
+  // get currect sender from communication module
+  node_t* cS = espC.getCurrentSender();
+  if (ODD_SIDE_FLAG) {
+    info.neighbourP = cS->DID / 2;
+  } else {
+    info.neighbourP = cS->NID / 3;
+  }
+}
+#endif /*RTI_SIDEWAY_POSITION*/
+#if defined(RTI_RECTANGULAR_SCHEME)
+void RTI::checkNeighbourP() {
+  // get currect sender from communication module
+  node_t* cS = espC.getCurrentSender();
+}
+#endif /*RTI_RECTANGULAR_SCHEME*/
+#if defined(RTI_CUSTOM_SCHEME)
+void RTI::checkNeighbourP() {
+  // get currect sender from communication module
+  node_t* cS = espC.getCurrentSender();
+}
+#endif /*RTI_CUSTOM_SCHEME*/

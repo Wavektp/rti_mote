@@ -1,6 +1,6 @@
 #include "esp_comm.h"
 
-#ifdef ROOT_NODE
+#if defined(ROOT_NODE)
 byte msgID = 0;
 #endif /*ROOT_NODE*/
 
@@ -67,12 +67,12 @@ void esp_comm::send(message_t* msg, size_t sz) {
     conf.isObserve = true;
     conf.msg_sz = sz;
   }
-#ifdef ROOT_NODE
+#if defined(ROOT_NODE)
   if ((msg->type) == MESSAGE_TYPE_BEACON) {
     msg->msgID = msgID++;
   }
 #endif /*ROOT_NODE*/
-#ifdef END_DEVICE
+#if defined(END_DEVICE)
   if ((msg->type) == MESSAGE_TYPE_CONTENT) {
     msg->msgID = conf.msg_id;
   }

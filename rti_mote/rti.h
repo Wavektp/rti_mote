@@ -6,22 +6,20 @@
 /************************************************************************
  *  RTI SCHEME DEFINITIONS                                              *
  ************************************************************************/
-#define RTI_DEFAULT_SCHEME     0
-#define RTI_SIDEWAY_SCHEME     1
-#define RTI_RECTANGULAR_SCHEME 2
-#define RTI_CUSTOM_SCHEME      3
-
-#if RTI_SCHEME == RTI_DEFAULT_SCHEME
+#if RTI_SCHEME == 0
+  #define RTI_DEFAULT_SCHEME
   #define RTI_NEIGHBOUR_COUNT (RTI_NODE_COUNT - 1)
 #endif /*RTI_SCHEME == RTI_DEFAULT_SCHEME*/
-#if RTI_SCHEME == RTI_SIDEWAY_SCHEME
+#if RTI_SCHEME == 1
+  #define RTI_SIDEWAY_SCHEME
   #if ((RTI_NODE_COUNT % 2) == 0)
     #define RTI_NEIGHBOUR_COUNT RTI_NODE_COUNT / 2
   #else
     #error NODE COUNT in SIDEWAY scheme must be even
   #endif /*(RTI_NODE_COUNT%2)!= 0*/
 #endif   /*RTI_SCHEME == RTI_SIDEWAY_SCHEME*/
-#if RTI_SCHEME == RTI_RECTANGULAR_SCHEME
+#if RTI_SCHEME == 2
+  #define RTI_RECTANGULAR_SCHEME
   #if ((RTI_NODE_COUNT % 4) == 0)
     #define SIDE_NODE_COUNT (RTI_NODE_COUNT / 4)
     #if ((DEVICE_ID % SIDE_NODE_COUNT) == 1)
@@ -34,13 +32,17 @@
     #error NODE COUNT modulo 4 must be 0 in RECTANGULAR scheme
   #endif /*(RTI_NODE_COUNT % 4)== 0*/
 #endif   /*RTI_SIDEWAY_SCHEME == RTI_RECTANGULAR_SCHEME*/
-#if RTI_SCHEME == RTI_CUSTOM_SCHEME
+#if RTI_SCHEME == 3
+  #define RTI_CUSTOM_SCHEME
   #define RTI_NODE_COUNT /*Must be manually assigned*/
+#endif                   /*RTI_CUSTOM_SCHEME*/
+#if defined(RTI_SIDEWAY_SCHEME)
+  #define ODD_SIDE_FLAG 0b00000001
 #endif
 /************************************************************************
  *  ROOT NODE DEFINITIONS                                               *
  ************************************************************************/
-#ifdef ROOT_NODE
+#if defined(ROOT_NODE)
   #define START_DELAY         2000
   #define RTI_NEIGHBOUR_COUNT RTI_NODE_COUNT
 #endif /*ROOT_NODE*/
@@ -77,15 +79,28 @@ typedef struct {
 /************************************************************************
  *  RTI CLASS                                                           *
  ************************************************************************/
+typedef unsigned char rti_position_scheme_t;
+
+typedef struct {
+  volatile uint8_t neighbourP = 0;
+  volatile int tempRSSI = 0;
+  rti_position_scheme_t pos = 0;
+  neighbour_t neighbour[RTI_NEIGHBOUR_COUNT];
+} rti_info_t;
+
 class RTI {
  private:
-  byte neighbourP = 0;
-  neighbour_t neighbour[RTI_NEIGHBOUR_COUNT];
+  rti_info_t info;
   esp_comm espC;
   ir_comm irC;
+  /**
+   * @brief Read current sender and check whether
+   *
+   */
+  void checkNeighbourP();
 
  public:
-#ifdef ROOT_NODE
+#if defined(ROOT_NODE)
   void start_rti();
 #endif /*ROOT_NODE*/
   void begin();

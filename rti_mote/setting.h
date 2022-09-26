@@ -30,12 +30,25 @@
 #define out(x)    Serial.print(x)
 #define outf(...) Serial.printf(__VA_ARGS__)
 #define outln(x)  Serial.println(x)
-#ifdef DEBUG_REPORT
+#if defined(DEBUG_REPORT)
+  #define VERBOSE_REPORT
   #define re(x)     Serial.print(x)
   #define repf(...) Serial.printf(__VA_ARGS__)
   #define reln(x)   Serial.println(x)
+  #if defined(VERBOSE_REPORT)
+    #define ver(x)    Serial.print(x)
+    #define verf(...) Serial.printf(__VA_ARGS__)
+    #define verln(x)  Serial.println(x)
+  #else
+    #define ver(x)    
+    #define verf(...) 
+    #define verln(x)  
+  #endif /*VERBOSE_REPORT*/
 #else
   #define re(x)
   #define ref(...)
   #define reln(x)
+  #define ver(x)    
+  #define verf(...) 
+  #define verln(x)  
 #endif /*DEBUG_REPORT*/
