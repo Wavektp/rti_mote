@@ -63,9 +63,9 @@ typedef struct {
 /************************************************************************
  *  RTI MESSAGE DEFINITION                                              *
  ************************************************************************/
-#define RTI_MSG_MASK_RSS 0b10101010
-#define RTI_MSG_MASK_IR  0b01010101
-#define RTI_MSG_MASK_END 0b11001100
+#define RTI_MSG_MASK_RSS 255  // 0b10101010
+#define RTI_MSG_MASK_IR  255  // 0b01010101
+#define RTI_MSG_MASK_END 255  // 0b11001100
 #define RTI_MSG_DELAY    1
 
 #define RTI_PREFIX_STR_SIZE 38

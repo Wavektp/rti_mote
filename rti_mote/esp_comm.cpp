@@ -76,6 +76,7 @@ void esp_comm::initESPNow() {
 }
 
 void esp_comm::send() {
+  esp_task_wdt_reset();  
   // send message
   if (((outgoing.type) & MESSAGE_INCOMPLETE_FLAG) == 0x00) {
     conf.isObserve = true;
@@ -133,18 +134,20 @@ message_t* esp_comm::get_outgoing() {
 }
 
 void receive(const uint8_t* macAddr, const uint8_t* data, int len) {
+  esp_task_wdt_reset();
   // copy data to incoming message
   re("Received MSG:");
   memcpy(&incoming, data, sizeof(incoming));
   cSender.NID = incoming.sNID;
   cSender.DID = incoming.sDID;
+  verf("FROM NET:%02x%02x \n", cSender.NID, cSender.DID);
   if (conf.isObserve) {  // Check next neighbour reception
     re("..on check:");
     if (conf.msg_id == incoming.msgID) {  // Check ID
       re("CORRECT ID..");
       if ((incoming.sNID == NEXT_NEIGHBOUR_NET_PREFIX) &&
           (incoming.sDID == NEXT_NEIGHBOUR_DEVICE_ID)) {  // Check sender
-        reln("NEXT NEIGHBOUR CONFIRMED >> CONFIRMED RECEPTION");
+        reln("NEIGHBOUR CONFIRMED");
         conf.isObserve = false;
       }
     }

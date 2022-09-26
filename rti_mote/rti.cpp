@@ -12,11 +12,11 @@ bool checkNeighbourP();
 
 void RTI::begin() {
   // Set watchdog timer
-  outln("...Initialize watchdog");
-  out("RESET TIMEOUT: ");
-  outln(RESET_TIMEOUT);
-  esp_task_wdt_init(RESET_TIMEOUT, true);
-  esp_task_wdt_add(NULL);
+  // outln("...Initialize watchdog");
+  // out("RESET TIMEOUT: ");
+  // outln(RESET_TIMEOUT);
+  // esp_task_wdt_init(RESET_TIMEOUT, true);
+  // esp_task_wdt_add(NULL);
 
   espC.begin((recv_cb_t)&receive, (report_cb_t)&report);
   outln("... initialize RTI Protocols");
@@ -98,8 +98,11 @@ void msgToStr(message_t* msg, char* str) {
   char st[RTI_STR_SIZE];
   sniprintf(st, RTI_PREFIX_STR_SIZE, RTI_PREFIX_STR, msg->type, msg->msgID,
             msg->sNID, msg->sDID, msg->rNID, msg->rDID, msg->nNID, msg->nDID);
+  ver("MSG String:PREFIX: ");
+  ver(st);
   if (msg->type == MESSAGE_TYPE_BEACON) {
     strcat(st, "BEACON");
+    ver(st);
     if (msg->len != 0) {
       outln("Error: Invalid Frame Format: contents on BEACON are not defined");
     }
@@ -110,18 +113,16 @@ void msgToStr(message_t* msg, char* str) {
     }
     for (int i = 1; i < (neighbourCount + 1); i++) {
       char temp[RTI_RSS_STR_SIZE];
-      sniprintf(st, RTI_RSS_STR_SIZE, RTI_RSS_STR, i, msg->content[i]);
+      sniprintf(temp, RTI_RSS_STR_SIZE, RTI_RSS_STR, i, msg->content[i]);
       re("DEBUG: check concat string: ");
-      re(temp);
-      strcat(st, temp);
-      reln(st);
+      reln(temp);
     }
     if (msg->content[(neighbourCount + 1)] != RTI_MSG_MASK_IR) {
       out("Error: Invalid Frame Format: not found IR PREFIX");
     }
     for (int i = (neighbourCount + 2); i < (2 * neighbourCount + 2); i++) {
       char temp[RTI_IR_STR_SIZE];
-      sniprintf(st, RTI_IR_STR_SIZE, RTI_IR_STR, (i - (neighbourCount + 2)),
+      sniprintf(temp, RTI_IR_STR_SIZE, RTI_IR_STR, (i - (neighbourCount + 2)),
                 msg->content[i]);
       strcat(st, temp);
     }
@@ -146,7 +147,7 @@ void create_rti_message(message_t* msg, byte type, bool isCompleted) {
     msg->nNID = NET_PREFIX;
     msg->nDID = DEVICE_ID;
   }
-  verf("Set NEXT: %02x%02x", msg->nNID, msg->nDID);
+  verf("Set NEXT:%02x%02x - ", msg->nNID, msg->nDID);
 #if defined(ROOT_NODE)
   if (type == MESSAGE_TYPE_BEACON) {
     reln("BEACON");
@@ -158,6 +159,7 @@ void create_rti_message(message_t* msg, byte type, bool isCompleted) {
 #endif /*ROOT_NODE*/
 #if defined(END_DEVICE)
   if (type == MESSAGE_TYPE_CONTENT) {
+    reln("CONTENT");
     msg->len = 2 * RTI_NEIGHBOUR_COUNT + 2;
     msg->content[0] = RTI_MSG_MASK_RSS;
     for (int i = 1; i < (RTI_NEIGHBOUR_COUNT + 1); i++) {
@@ -196,7 +198,7 @@ void RTI::routine() {
     espC.send();
   }
   // reset watchdog
-  esp_task_wdt_reset();
+
 }
 
 void receive(message_t* incoming) {
@@ -214,19 +216,19 @@ void receive(message_t* incoming) {
     outln(outStr);
 #endif
 #if defined(END_DEVICE)
-    re("CONTENT received:");
+    re("CONTENT received..\n");
     if (checkNeighbourP()) {
       info.neighbour[info.neighbourP].RSS = info.tempRSSI;
       irC.set_p_write(&info.neighbour[info.neighbourP].RSS);
       repf("Set IR Pointer to NEIGHBOUR %02x \n", info.neighbourP);
     } else {
-      reln("Set IR Pointer to NEIGHBOUR TEMP");
+      reln("Set IR Pointer to TEMP IR");
       irC.set_p_write(&info.tempIR);
     }
 #endif
   }
-  verf("NEXT NET: %02x ID: %02x", incoming->nNID, incoming->nDID);
-  verf("THIS NET: %02x ID: %02x", NET_PREFIX, DEVICE_ID);
+  verf("NEXT NET:%02x%02x", incoming->nNID, incoming->nDID);
+  verf("THIS NET:%02x%02x \n", NET_PREFIX, DEVICE_ID);
   // ver("Compare NEXT/THIS - NET:");
   // ver((incoming->nNID == NET_PREFIX));
   // ver("ID:");
@@ -239,13 +241,13 @@ void receive(message_t* incoming) {
   // verln((d == DEVICE_ID));
   if (incoming->nNID == NET_PREFIX &&
       incoming->nDID == DEVICE_ID) {  // if this node is the next sender
-    verln("TOKEN RECEIVED..");
+    verln("TOKEN RECEIVED..\n");
     delay(1);
-    // send IR
-    irC.send();
     // send ESP-NOW and reset
     message_t* m = espC.get_outgoing();
 #if defined(END_DEVICE)
+    // send IR
+    irC.send();
     create_rti_message(m, MESSAGE_TYPE_CONTENT, true);
 #endif /*END_DEVICE*/
 #if defined(ROOT_NODE)
@@ -262,7 +264,7 @@ void report(int rssi) {
     re("RSSI BEFORE SET: ");
     reln(info.neighbour[info.neighbourP].RSS);
     info.neighbour[info.neighbourP].RSS = rssi;
-    outf("RSSI NEIGHBOUR: %02x%02x P:%02x RSSI:%02x",
+    outf("RSSI NEIGHBOUR: %02x%02x P:%02x RSSI:%02x \n",
          info.neighbour[info.neighbourP].node.NID,
          info.neighbour[info.neighbourP].node.DID, info.neighbourP,
          info.neighbour[info.neighbourP].RSS);
@@ -282,8 +284,10 @@ bool checkNeighbourP() {
   re("CHECK NEIGHBOUR: SIDEWAY SCHEME:");
   // get currect sender from communication module
   node_t* cS = espC.getCurrentSender();
-  if (cS->DID == 0)
+  if (cS->DID == 0) {
+    reln("Neighbour not exists");
     return false;
+  }
   if (ODD_SIDE_FLAG) {
     if (cS->DID % 2)
       return false;
