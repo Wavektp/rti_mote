@@ -146,6 +146,7 @@ void create_rti_message(message_t* msg, byte type, bool isCompleted) {
     msg->nNID = NET_PREFIX;
     msg->nDID = DEVICE_ID;
   }
+  verf("Set NEXT: %02x%02x", msg->nNID, msg->nDID);
 #if defined(ROOT_NODE)
   if (type == MESSAGE_TYPE_BEACON) {
     reln("BEACON");
@@ -224,18 +225,18 @@ void receive(message_t* incoming) {
   }
   verf("NEXT NET: %02x ID: %02x", incoming->nNID, incoming->nDID);
   verf("THIS NET: %02x ID: %02x", NET_PREFIX, DEVICE_ID);
-  ver("Compare NEXT/THIS - NET:");
-  ver((incoming->nNID == NET_PREFIX));
-  ver("ID:");
-  verln((incoming->nDID == DEVICE_ID));
-  byte n = incoming->nNID;
-  byte d = incoming->nDID;
-  ver("Set bytes and compare NEXT/THIS - NET:");
-  ver((n == NET_PREFIX));
-  ver("ID:");
-  verln((d == DEVICE_ID));
-  if (n == NET_PREFIX &&
-      d == DEVICE_ID) {  // if this node is the next sender
+  // ver("Compare NEXT/THIS - NET:");
+  // ver((incoming->nNID == NET_PREFIX));
+  // ver("ID:");
+  // verln((incoming->nDID == DEVICE_ID));
+  // byte n = incoming->nNID;
+  // byte d = incoming->nDID;
+  // ver("Set bytes and compare NEXT/THIS - NET:");
+  // ver((n == NET_PREFIX));
+  // ver("ID:");
+  // verln((d == DEVICE_ID));
+  if (incoming->nNID == NET_PREFIX &&
+      incoming->nDID == DEVICE_ID) {  // if this node is the next sender
     verln("TOKEN RECEIVED..");
     delay(1);
     // send IR
