@@ -84,7 +84,7 @@ typedef struct {
   volatile bool isNeighbourExist = false;
   volatile uint8_t neighbourP = 0;
   int tempRSSI = 0;
-  byte tempIR = 0;
+  int tempIR = 0;
   rti_position_scheme_t pos = 0;
   neighbour_t neighbour[RTI_NEIGHBOUR_COUNT];
 } rti_info_t;
@@ -94,7 +94,6 @@ class RTI {
   /**
    * @brief Read current sender and check whether neighbour exist at which index
    */
-  bool checkNeighbourP();
 
  public:
 #if defined(ROOT_NODE)

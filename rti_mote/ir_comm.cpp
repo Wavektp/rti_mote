@@ -48,7 +48,7 @@ void ir_comm::receive() {
   }
 }
 
-void ir_comm::set_p_write(byte* irRSS) {
+void ir_comm::set_p_write(int* irRSS) {
   *irRSS = 0;
   p_write = irRSS;
 }

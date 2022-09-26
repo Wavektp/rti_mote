@@ -71,7 +71,6 @@ typedef struct {
   size_t msg_sz;
 } confirmable_t;
 
-
 #define NEXT_NEIGHBOUR_NET_PREFIX NET_PREFIX
 #define NEXT_NEIGHBOUR_DEVICE_ID  DEVICE_ID + 1
 #if NEXT_NEIGHBOUR_DEVICE_ID > RTI_NODE_COUNT

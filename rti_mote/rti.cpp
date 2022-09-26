@@ -8,6 +8,7 @@ void msgToStr(message_t* msg, char* str);
 void create_rti_message(message_t* msg, byte type, bool isCompleted);
 void receive(message_t* incoming);
 void report(int rssi);
+bool checkNeighbourP();
 
 void RTI::begin() {
   // Set watchdog timer
@@ -259,7 +260,7 @@ void RTI::checkNeighbourP() {
 }
 #endif /*RTI_DEFAULT_SCHEME*/
 #if defined(RTI_SIDEWAY_SCHEME)
-bool RTI::checkNeighbourP() {
+bool checkNeighbourP() {
   info.neighbourP = RTI_NEIGHBOUR_COUNT;
   info.isNeighbourExist = false;
   re("CHECK NEIGHBOUR: SIDEWAY SCHEME:");
