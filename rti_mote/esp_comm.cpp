@@ -133,8 +133,6 @@ message_t* esp_comm::get_outgoing() {
 }
 
 void receive(const uint8_t* macAddr, const uint8_t* data, int len) {
-  // reset watchdog
-  esp_task_wdt_reset();
   // copy data to incoming message
   re("Received MSG:");
   memcpy(&incoming, data, sizeof(incoming));

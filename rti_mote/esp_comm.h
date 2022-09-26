@@ -19,10 +19,6 @@
     BROADCAST_CODE, BROADCAST_CODE, BROADCAST_CODE, BROADCAST_CODE, \
         BROADCAST_CODE, BROADCAST_CODE                              \
   }
-#define MAX_PEER 5
-
-#define NET_PREFIX 0x10
-#define DEVICE_ID  1
 
 #define DEVICE_MAC_ADDRESS                                                  \
   {                                                                         \

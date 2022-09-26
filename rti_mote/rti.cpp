@@ -195,6 +195,8 @@ void RTI::routine() {
     // message -> resend
     espC.send();
   }
+  // reset watchdog
+  esp_task_wdt_reset();
 }
 
 void receive(message_t* incoming) {
