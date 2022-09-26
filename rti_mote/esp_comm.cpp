@@ -94,7 +94,7 @@ void esp_comm::send() {
   stamp = millis();
   esp_err_t res =
       esp_now_send(brcst_addr, (uint8_t*)&outgoing, sizeof(outgoing));
-  Serial.print("\r\ESP_NOW Sent Status: ");
+  Serial.print("\r\nESP_NOW Sent Status: ");
   if (res == ESP_OK) {
     Serial.println("SUCCESS");
   } else if (res == ESP_ERR_ESPNOW_NOT_INIT) {
