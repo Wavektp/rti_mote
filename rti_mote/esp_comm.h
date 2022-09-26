@@ -22,7 +22,7 @@
 #define MAX_PEER 5
 
 #define NET_PREFIX 0x10
-#define DEVICE_ID  2
+#define DEVICE_ID  1
 
 #define DEVICE_MAC_ADDRESS                                                  \
   {                                                                         \
@@ -96,7 +96,6 @@ class esp_comm {
   /// @param pointer to message
   /// @param size of message
   void send();
-  void resend();
   /// @brief write MAC ADDRESS as string
   /// @param macAddr MAC ADDRESS
   /// @param str pointer to character array

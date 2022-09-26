@@ -32,10 +32,10 @@ void esp_comm::begin(recv_cb_t recv, report_cb_t rep) {
   while (!Serial) {
   }
   outln("... initialize ESP-NOW");
-// Enable WiFi and change MAC ADDRESS
+  // Enable WiFi and change MAC ADDRESS
   customize_mac_address();
   initESPNow();
-  
+
   recv_cb = recv;
   rep_cb = rep;
 }
@@ -111,10 +111,6 @@ void esp_comm::send() {
   } else {
     Serial.println("Not sure what happened");
   }
-}
-
-void esp_comm::resend() {
-  send();
 }
 
 void esp_comm::macAddrToStr(const uint8_t* macAddr, char* str, int len) {

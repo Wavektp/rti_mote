@@ -192,7 +192,7 @@ void RTI::routine() {
   if (espC.checkTimeout(RTI_TIMEOUT)) {
     // Next node does not tranmit assuming incorrect reception, repeat the last
     // message -> resend
-    espC.resend();
+    espC.send();
   }
 }
 
@@ -222,8 +222,21 @@ void receive(message_t* incoming) {
     }
 #endif
   }
-  if (incoming->nNID == NET_PREFIX &&
-      incoming->nDID == DEVICE_ID) {  // if this node is the next sender
+  verf("NEXT NET: %02x ID: %02x", incoming->nNID, incoming->nDID);
+  verf("THIS NET: %02x ID: %02x", NET_PREFIX, DEVICE_ID);
+  ver("Compare NEXT/THIS - NET:");
+  ver((incoming->nNID == NET_PREFIX));
+  ver("ID:");
+  verln((incoming->nDID == DEVICE_ID));
+  byte n = incoming->nNID;
+  byte d = incoming->nDID;
+  ver("Set bytes and compare NEXT/THIS - NET:");
+  ver((n == NET_PREFIX));
+  ver("ID:");
+  verln((d == DEVICE_ID));
+  if (n == NET_PREFIX &&
+      d == DEVICE_ID) {  // if this node is the next sender
+    verln("TOKEN RECEIVED..");
     delay(1);
     // send IR
     irC.send();
@@ -241,7 +254,7 @@ void receive(message_t* incoming) {
 
 void report(int rssi) {
   info.tempRSSI = rssi;
-  repf("RTI - REPORT CALLBACK SET TEMP RSSI:  %02d \n", info.tempRSSI);
+  repf("RTI - REPORT CALLBACK SET TEMP RSSI: %02d \n", info.tempRSSI);
   if (info.isNeighbourExist) {
     re("RSSI BEFORE SET: ");
     reln(info.neighbour[info.neighbourP].RSS);
