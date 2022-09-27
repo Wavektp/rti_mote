@@ -26,24 +26,24 @@ float ir_comm::rss() {
 }
 
 void ir_comm::receive() {
-  if (IrReceiver.decode()) {
-    re("Received command:");
-    IrReceiver.printIRResultShort(&Serial);
-    IrReceiver.printIRSendUsage(&Serial);
-    // TODO keep value to evaluate RTI
-    *p_write = 1;
-    re(IrReceiver.decodedIRData.command);
-    reln(":Write IR reception BOOLEAN value");
-    // if (IrReceiver.decodedIRData.protocol == UNKNOWN) {
-    //   Serial.println(
-    //       F("Received noise or an unknown (or not yet enabled) protocol"));
-    //   // We have an unknown protocol here, print more info
-    //   IrReceiver.printIRResultRawFormatted(&Serial, true);
-    // }
-    // Serial.println();
+  // if (IrReceiver.decode()) {
+  //   re("Received command:");
+  //   IrReceiver.printIRResultShort(&Serial);
+  //   IrReceiver.printIRSendUsage(&Serial);
+  //   // TODO keep value to evaluate RTI
+  //   *p_write = 1;
+  //   re(IrReceiver.decodedIRData.command);
+  //   reln(":Write IR reception BOOLEAN value");
+  //   if (IrReceiver.decodedIRData.protocol == UNKNOWN) {
+  //     Serial.println(
+  //         F("Received noise or an unknown (or not yet enabled) protocol"));
+  //     // We have an unknown protocol here, print more info
+  //     IrReceiver.printIRResultRawFormatted(&Serial, true);
+  //   }
+  //   Serial.println();
 
-    IrReceiver.resume();  // Enable receiving of the next value
-  }
+  //   IrReceiver.resume();  // Enable receiving of the next value
+  // }
 }
 
 void ir_comm::set_p_write(volatile int* irRSS) {

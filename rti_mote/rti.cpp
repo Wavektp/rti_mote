@@ -172,6 +172,7 @@ void create_rti_message(message_t* msg, byte type, bool isCompleted) {
     msg->len = 2 * RTI_NEIGHBOUR_COUNT + 2;
     msg->content[0] = RTI_MSG_MASK_RSS;
     for (int i = 1; i < (RTI_NEIGHBOUR_COUNT + 1); i++) {
+      verf("LOOK RSSI INDEX%02x=%02d \n", (i - 1), info.neighbour[i - 1].RSS);
       msg->content[i] = info.neighbour[i - 1].RSS;
       info.neighbour[i - 1].RSS = 0;  // reset value
       verf("SET RSSI N%02x=%02d \n", i, msg->content[i]);
@@ -181,7 +182,8 @@ void create_rti_message(message_t* msg, byte type, bool isCompleted) {
          i++) {
       msg->content[i] = info.neighbour[i - (RTI_NEIGHBOUR_COUNT + 2)].irRSS;
       info.neighbour[i - (RTI_NEIGHBOUR_COUNT + 2)].irRSS = 0;  // reset value
-      verf("SET IR N%02x=%02d \n", (i - (RTI_NEIGHBOUR_COUNT + 1)), msg->content[i]);
+      verf("SET IR N%02x=%02d \n", (i - (RTI_NEIGHBOUR_COUNT + 1)),
+           msg->content[i]);
     }
     msg->content[(2 * RTI_NEIGHBOUR_COUNT + 2)] = RTI_MSG_MASK_END;
     for (int i = 2 * RTI_NEIGHBOUR_COUNT + 3; i < MAX_CONTENT_SIZE; i++) {
@@ -212,6 +214,7 @@ void RTI::routine() {
 }
 
 void receive(message_t* incoming) {
+  esp_task_wdt_reset();
   info.isNeighbourExist = false;
   // copy data to incoming message
   re("RTI CALLBACK: ");
@@ -220,7 +223,6 @@ void receive(message_t* incoming) {
     // Still no action
   }
   if (incoming->type == MESSAGE_TYPE_CONTENT) {
-    esp_task_wdt_reset();
 #if defined(ROOT_NODE)
     re("CONTENT received: \n");
     char outStr[RTI_STR_SIZE];
@@ -230,8 +232,10 @@ void receive(message_t* incoming) {
 #if defined(END_DEVICE)
     re("CONTENT received: ");
     if (checkNeighbourP()) {
-      verf("Set RSSI N%02x=%02d: ", info.neighbourP, info.tempRSSI);
+      verf("Attempt RSSI N%02x=%02d: ", info.neighbourP, info.tempRSSI);
       info.neighbour[info.neighbourP].RSS = info.tempRSSI;
+      verf("SET RSSI N%02x=%02d: ", info.neighbourP,
+           info.neighbour[info.neighbourP].RSS);
       verf("Set IR Pointer to NEIGHBOUR %02x \n", info.neighbourP);
       irC.set_p_write(&info.neighbour[info.neighbourP].RSS);
     } else {
@@ -256,7 +260,7 @@ void receive(message_t* incoming) {
 #if defined(ROOT_NODE)
     create_rti_message(m, MESSAGE_TYPE_BEACON, true);
 #endif /*ROOT_NODE*/
-    delay(10);
+    delay(100);
     espC.send();
   }
 }
@@ -294,7 +298,7 @@ bool checkNeighbourP() {
     verln("ROOT NODE detected \n");
     return false;
   }
-  byte nID;
+  uint8_t nID;
   if CHECKFLAG (info.pos, ODD_SIDE_NEIGHBOUR_FLAG) {
     if (cS->DID % 2 == 0)
       return false;
@@ -311,9 +315,9 @@ bool checkNeighbourP() {
     ver("Neigbour ID out of bound");
     return false;
   }
+  verf("SET NID:%02d \n", nID);
   info.neighbourP = (uint8_t)nID;
   info.isNeighbourExist = true;
-  verf("SET NID:%02d \n", nID);
   return true;
 }
 #endif /*RTI_SIDEWAY_POSITION*/

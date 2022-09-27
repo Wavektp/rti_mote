@@ -13,7 +13,7 @@
 #if RTI_SCHEME == 1
   #define RTI_SIDEWAY_SCHEME
   #if ((RTI_NODE_COUNT % 2) == 0)
-    #define RTI_NEIGHBOUR_COUNT RTI_NODE_COUNT / 2
+    #define RTI_NEIGHBOUR_COUNT (RTI_NODE_COUNT / 2)
   #else
     #error NODE COUNT in SIDEWAY scheme must be even
   #endif /*(RTI_NODE_COUNT%2)!= 0*/
@@ -57,8 +57,8 @@
 
 typedef struct {
   node_t node;
-  volatile int irRSS = 0;
-  volatile int RSS = 0;
+  volatile int irRSS;
+  volatile int RSS;
 } neighbour_t;
 
 /************************************************************************
