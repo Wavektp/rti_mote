@@ -18,6 +18,8 @@
     #error NODE COUNT in SIDEWAY scheme must be even
   #endif /*(RTI_NODE_COUNT%2)!= 0*/
 #endif   /*RTI_SCHEME == RTI_SIDEWAY_SCHEME*/
+#define ODD_SIDE_NEIGHBOUR_FLAG  0b00000001
+#define EVEN_SIDE_NEIGHBOUR_FLAG 0b00000010
 #if RTI_SCHEME == 2
   #define RTI_RECTANGULAR_SCHEME
   #if ((RTI_NODE_COUNT % 4) == 0)
@@ -37,7 +39,6 @@
   #define RTI_NODE_COUNT /*Must be manually assigned*/
 #endif                   /*RTI_CUSTOM_SCHEME*/
 #if defined(RTI_SIDEWAY_SCHEME)
-  #define ODD_SIDE_FLAG 0b00000001
 #endif
 /************************************************************************
  *  ROOT NODE DEFINITIONS                                               *
@@ -91,10 +92,6 @@ typedef struct {
 
 class RTI {
  private:
-  /**
-   * @brief Read current sender and check whether neighbour exist at which index
-   */
-
  public:
 #if defined(ROOT_NODE)
   void start_rti();

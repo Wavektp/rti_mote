@@ -2,7 +2,7 @@
  *                  DEVICE SETTING                         *
  ***********************************************************/
 #define NET_PREFIX 0x10
-#define DEVICE_ID  2
+#define DEVICE_ID  1
 #if (DEVICE_ID == 0)
   #define ROOT_NODE  // ROOT NODE
 #else

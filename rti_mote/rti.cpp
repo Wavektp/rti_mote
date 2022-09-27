@@ -46,20 +46,25 @@ void RTI::begin() {
   #if defined(RTI_SIDEWAY_SCHEME)
   out("SIDEWAY SCHEME:");
   outf("DEVICE ID: %02x \n", DEVICE_ID);
-  if (DEVICE_ID % 2) {
-    re("-> ODD SIDE detected");
-    info.pos |= ODD_SIDE_FLAG;
-  }
+
   bool isEven = (DEVICE_ID % 2 == 0);
+  // if DID is even
+  if (isEven) {
+    ver("-> DEVICE on EVEN side -> NEIGHBOUR on ODD side \n");
+    SETFLAG(info.pos, ODD_SIDE_NEIGHBOUR_FLAG);
+  } else {
+    ver("-> DEVICE on ODD side -> NEIGHBOUR on EVEN side \n");
+    SETFLAG(info.pos, EVEN_SIDE_NEIGHBOUR_FLAG);
+  }
   for (int i = 0; i < RTI_NEIGHBOUR_COUNT; i++) {
-    byte dID = (2 * i + 1);
-    if (!isEven) {
-      dID += 1;
-    }
+    byte nDID = (2 * i + 1);  // NEIGHBOUR ID start at 1 on ODD side
+    if CHECKFLAG (info.pos, EVEN_SIDE_NEIGHBOUR_FLAG)
+      nDID++;  // NEIGHBOUR ID start at 2 on EVEN side
     info.neighbour[i].node.NID = NET_PREFIX;
-    info.neighbour[i].node.DID = dID;
+    info.neighbour[i].node.DID = nDID;
     info.neighbour[i].RSS = 0;
     info.neighbour[i].irRSS = 0;
+    verf("SET NEIGHBOUR INDEX:%02d, NID:%02d \n", i, nDID);
   }
 
   #endif /*RTI_SIDEWAY_SCHEME*/
@@ -99,6 +104,7 @@ void msgToStr(message_t* msg, char* str) {
   sniprintf(st, RTI_PREFIX_STR_SIZE, RTI_PREFIX_STR, msg->type, msg->msgID,
             msg->sNID, msg->sDID, msg->rNID, msg->rDID, msg->nNID, msg->nDID);
   ver("MSG String:PREFIX: ");
+  st[RTI_PREFIX_STR_SIZE] = 0;
   ver(st);
   if (msg->type == MESSAGE_TYPE_BEACON) {
     strcat(st, "BEACON");
@@ -198,7 +204,6 @@ void RTI::routine() {
     espC.send();
   }
   // reset watchdog
-
 }
 
 void receive(message_t* incoming) {
@@ -210,7 +215,7 @@ void receive(message_t* incoming) {
   }
   if (incoming->type == MESSAGE_TYPE_CONTENT) {
 #if defined(ROOT_NODE)
-    re("CONTENT received:");
+    re("CONTENT received: \n");
     char outStr[RTI_STR_SIZE];
     msgToStr(incoming, outStr);
     outln(outStr);
@@ -220,28 +225,18 @@ void receive(message_t* incoming) {
     if (checkNeighbourP()) {
       info.neighbour[info.neighbourP].RSS = info.tempRSSI;
       irC.set_p_write(&info.neighbour[info.neighbourP].RSS);
-      repf("Set IR Pointer to NEIGHBOUR %02x \n", info.neighbourP);
+      verf("Set IR Pointer to NEIGHBOUR %02x \n", info.neighbourP);
     } else {
-      reln("Set IR Pointer to TEMP IR");
+      verln("Set IR Pointer to TEMP IR");
       irC.set_p_write(&info.tempIR);
     }
 #endif
   }
-  verf("NEXT NET:%02x%02x", incoming->nNID, incoming->nDID);
+  verf("NEXT NET:%02x%02x, ", incoming->nNID, incoming->nDID);
   verf("THIS NET:%02x%02x \n", NET_PREFIX, DEVICE_ID);
-  // ver("Compare NEXT/THIS - NET:");
-  // ver((incoming->nNID == NET_PREFIX));
-  // ver("ID:");
-  // verln((incoming->nDID == DEVICE_ID));
-  // byte n = incoming->nNID;
-  // byte d = incoming->nDID;
-  // ver("Set bytes and compare NEXT/THIS - NET:");
-  // ver((n == NET_PREFIX));
-  // ver("ID:");
-  // verln((d == DEVICE_ID));
   if (incoming->nNID == NET_PREFIX &&
       incoming->nDID == DEVICE_ID) {  // if this node is the next sender
-    verln("TOKEN RECEIVED..\n");
+    reln("TOKEN RECEIVED..\n");
     delay(1);
     // send ESP-NOW and reset
     message_t* m = espC.get_outgoing();
@@ -281,35 +276,34 @@ void RTI::checkNeighbourP() {
 bool checkNeighbourP() {
   info.neighbourP = RTI_NEIGHBOUR_COUNT;
   info.isNeighbourExist = false;
-  re("CHECK NEIGHBOUR: SIDEWAY SCHEME:");
   // get currect sender from communication module
   node_t* cS = espC.getCurrentSender();
+  verf("CHECK NEIGHBOUR: SIDEWAY SCHEME: SID:%02x", cS->DID);
   if (cS->DID == 0) {
-    reln("Neighbour not exists");
+    verln("ROOT NODE detected \n");
     return false;
   }
-  if (ODD_SIDE_FLAG) {
-    if (cS->DID % 2)
-      return false;
-    reln("Neighbour on Even Side");
-    byte nID = ((cS->DID / 2) - 1);
-    if (nID >= RTI_NEIGHBOUR_COUNT)
-      return false;
-    info.neighbourP = nID;
-    info.isNeighbourExist = true;
-    return true;
-  } else {
+  byte nID;
+  if CHECKFLAG (info.pos, ODD_SIDE_NEIGHBOUR_FLAG) {
     if (cS->DID % 2 == 0)
       return false;
-    reln("Neighbour on Odd Side");
-    byte nID = cS->NID / 2;
-    if (nID >= RTI_NEIGHBOUR_COUNT)
-      return false;
-    info.neighbourP = nID;
-    info.isNeighbourExist = true;
-    return true;
+    verln("Neighbour on ODD Side - ");
+    byte nID = (cS->DID / 2);
   }
-  repf("SET NEIGHBOUR POINTER:%02x", info.neighbourP);
+  if CHECKFLAG (info.pos, EVEN_SIDE_NEIGHBOUR_FLAG) {
+    if (cS->DID % 2 == 1)
+      return false;
+    reln("Neighbour on EVEN Side - ");
+    byte nID = (cS->NID / 2) - 1;
+  }
+  if (nID >= RTI_NEIGHBOUR_COUNT) {
+    ver("Neigbour ID out of bound");
+    return false;
+  }
+  info.neighbourP = nID;
+  info.isNeighbourExist = true;
+  verf("SET NID:%02d \n", nID);
+  return true;
 }
 #endif /*RTI_SIDEWAY_POSITION*/
 #if defined(RTI_RECTANGULAR_SCHEME)

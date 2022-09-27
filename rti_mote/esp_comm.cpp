@@ -76,7 +76,7 @@ void esp_comm::initESPNow() {
 }
 
 void esp_comm::send() {
-  esp_task_wdt_reset();  
+  esp_task_wdt_reset();
   // send message
   if (((outgoing.type) & MESSAGE_INCOMPLETE_FLAG) == 0x00) {
     conf.isObserve = true;
@@ -99,8 +99,7 @@ void esp_comm::send() {
   if (res == ESP_OK) {
     Serial.println("SUCCESS");
   } else if (res == ESP_ERR_ESPNOW_NOT_INIT) {
-    // How did we get so far!!
-    Serial.println("ESPNOW not Init.");
+    Serial.println("ESPNOW not Initialized");
   } else if (res == ESP_ERR_ESPNOW_ARG) {
     Serial.println("Invalid Argument");
   } else if (res == ESP_ERR_ESPNOW_INTERNAL) {
@@ -110,7 +109,7 @@ void esp_comm::send() {
   } else if (res == ESP_ERR_ESPNOW_NOT_FOUND) {
     Serial.println("Peer not found.");
   } else {
-    Serial.println("Not sure what happened");
+    Serial.println("Unexpected Errors");
   }
 }
 
@@ -133,6 +132,10 @@ message_t* esp_comm::get_outgoing() {
   return &outgoing;
 }
 
+node_t* esp_comm::getCurrentSender() {
+  return &cSender;
+}
+
 void receive(const uint8_t* macAddr, const uint8_t* data, int len) {
   esp_task_wdt_reset();
   // copy data to incoming message
@@ -142,24 +145,11 @@ void receive(const uint8_t* macAddr, const uint8_t* data, int len) {
   cSender.DID = incoming.sDID;
   verf("FROM NET:%02x%02x \n", cSender.NID, cSender.DID);
   if (conf.isObserve) {  // Check next neighbour reception
-    re("..on check:");
-    if (conf.msg_id == incoming.msgID) {  // Check ID
-      re("CORRECT ID..");
-      if ((incoming.sNID == NEXT_NEIGHBOUR_NET_PREFIX) &&
-          (incoming.sDID == NEXT_NEIGHBOUR_DEVICE_ID)) {  // Check sender
-        reln("NEIGHBOUR CONFIRMED");
-        conf.isObserve = false;
-      }
-    }
+    reln("Network alive confirmed \n");
+    conf.isObserve = false;
   }
-  recv_cb(&incoming);
-  // char rti_message_str[RTI_STR_SIZE];
-  // rtiMessageToStr(rti_message_str, RTI_STR_SIZE);
-  // char macAddrStr[MAC_ADDR_STR_SIZE];
-  // macAddrToStr(macAddr, macAddrStr, MAC_ADDR_STR_SIZE);
 
-  // outf("Received message from: %s\r\n  %s\n", macAddrStr, rti_message_str);
-  // // check functionality
+  recv_cb(&incoming);
 }
 
 void send_cb(const uint8_t* macAddr, esp_now_send_status_t st) {
@@ -177,8 +167,4 @@ void promiscuous_rx_cb(void* buf, wifi_promiscuous_pkt_type_t type) {
   int rssi = ppkt->rx_ctrl.rssi;
   repf("WIFI CALLBACK: Retrieving RSSI: %02d, ", rssi);
   rep_cb(rssi);
-}
-
-node_t* esp_comm::getCurrentSender() {
-  return &cSender;
 }
