@@ -69,12 +69,12 @@ typedef struct {
 #define RTI_MSG_MASK_END 255  // 0b11001100
 #define RTI_MSG_DELAY    1
 
-#define RTI_PREFIX_STR_SIZE 38
+#define RTI_PREFIX_STR_SIZE 39
 #define RTI_PREFIX_STR      "<T:%02x><ID:%02x><S:%02x%02x><R:%02x%02x><N:%02x%02x>\n"
-#define RTI_RSS_STR         "<N%02x: RSS%02x>\n"
-#define RTI_RSS_STR_SIZE    13
-#define RTI_IR_STR          "<N%02x: IR%02x>\n"
-#define RTI_IR_STR_SIZE     12
+#define RTI_RSS_STR         "<N%02x: RSS%02d>\n"
+#define RTI_RSS_STR_SIZE    14
+#define RTI_IR_STR          "<N%02x: IR%02d>\n"
+#define RTI_IR_STR_SIZE     13
 #define RTI_STR_SIZE        250
 /************************************************************************
  *  RTI CLASS                                                           *

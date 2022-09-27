@@ -120,8 +120,9 @@ void msgToStr(message_t* msg, char* str) {
     for (int i = 1; i < (neighbourCount + 1); i++) {
       char temp[RTI_RSS_STR_SIZE];
       sniprintf(temp, RTI_RSS_STR_SIZE, RTI_RSS_STR, i, msg->content[i]);
-      re("DEBUG: check concat string: ");
+      re("\n DEBUG: check concat string: ");
       reln(temp);
+      strcat(st, temp);
     }
     if (msg->content[(neighbourCount + 1)] != RTI_MSG_MASK_IR) {
       out("Error: Invalid Frame Format: not found IR PREFIX");
@@ -140,7 +141,7 @@ void msgToStr(message_t* msg, char* str) {
 
 void create_rti_message(message_t* msg, byte type, bool isCompleted) {
   /*create message prefix*/
-  re("CREATE MESSAGE: ");
+  re("\r\nCREATE MESSAGE: ");
   msg->type = type;
   msg->sNID = NET_PREFIX;
   msg->sDID = DEVICE_ID;
@@ -255,15 +256,17 @@ void receive(message_t* incoming) {
 void report(int rssi) {
   info.tempRSSI = rssi;
   repf("RTI - REPORT CALLBACK SET TEMP RSSI: %02d \n", info.tempRSSI);
+#if defined(END_DEVICE)
   if (info.isNeighbourExist) {
     re("RSSI BEFORE SET: ");
     reln(info.neighbour[info.neighbourP].RSS);
     info.neighbour[info.neighbourP].RSS = rssi;
-    outf("RSSI NEIGHBOUR: %02x%02x P:%02x RSSI:%02x \n",
+    outf("RSSI NEIGHBOUR: %02x%02x P:%02x RSSI:%02d \n",
          info.neighbour[info.neighbourP].node.NID,
          info.neighbour[info.neighbourP].node.DID, info.neighbourP,
          info.neighbour[info.neighbourP].RSS);
   }
+#endif /*END_DEVICE*/
 }
 
 #if defined(RTI_DEFAULT_SCHEME)
@@ -278,7 +281,7 @@ bool checkNeighbourP() {
   info.isNeighbourExist = false;
   // get currect sender from communication module
   node_t* cS = espC.getCurrentSender();
-  verf("CHECK NEIGHBOUR: SIDEWAY SCHEME: SID:%02x", cS->DID);
+  verf("CHECK NEIGHBOUR: SIDEWAY SCHEME: SID:%02x: ", cS->DID);
   if (cS->DID == 0) {
     verln("ROOT NODE detected \n");
     return false;
@@ -287,13 +290,13 @@ bool checkNeighbourP() {
   if CHECKFLAG (info.pos, ODD_SIDE_NEIGHBOUR_FLAG) {
     if (cS->DID % 2 == 0)
       return false;
-    verln("Neighbour on ODD Side - ");
+    ver("Neighbour on ODD Side - ");
     byte nID = (cS->DID / 2);
   }
   if CHECKFLAG (info.pos, EVEN_SIDE_NEIGHBOUR_FLAG) {
     if (cS->DID % 2 == 1)
       return false;
-    reln("Neighbour on EVEN Side - ");
+    ver("Neighbour on EVEN Side - ");
     byte nID = (cS->NID / 2) - 1;
   }
   if (nID >= RTI_NEIGHBOUR_COUNT) {
