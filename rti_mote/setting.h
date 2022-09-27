@@ -2,7 +2,7 @@
  *                  DEVICE SETTING                         *
  ***********************************************************/
 #define NET_PREFIX 0x10
-#define DEVICE_ID  0
+#define DEVICE_ID  2
 #if (DEVICE_ID == 0)
   #define ROOT_NODE  // ROOT NODE
 #else
@@ -13,7 +13,7 @@
 /***********************************************************
  *                  RTI SETTING                            *
  ***********************************************************/
-#define RTI_NODE_COUNT 2
+#define RTI_NODE_COUNT 4
 #if DEVICE_ID > RTI_NODE_COUNT
   #error DEVICE_ID must be in range of NODE COUNT
 #endif /*DEVICE_ID > RTI_NODE_COUNT*/

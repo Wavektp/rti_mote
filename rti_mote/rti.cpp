@@ -244,8 +244,8 @@ void receive(message_t* incoming) {
     }
 #endif
   }
-  verf("NEXT NET:%02x%02x, ", incoming->nNID, incoming->nDID);
-  verf("THIS NET:%02x%02x \n", NET_PREFIX, DEVICE_ID);
+  verf("NEXT N:%02x%02x, ", incoming->nNID, incoming->nDID);
+  verf("THIS N:%02x%02x \n", NET_PREFIX, DEVICE_ID);
   if (incoming->nNID == NET_PREFIX &&
       incoming->nDID == DEVICE_ID) {  // if this node is the next sender
     reln("TOKEN RECEIVED..");
