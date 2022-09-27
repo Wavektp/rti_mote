@@ -164,6 +164,6 @@ void promiscuous_rx_cb(void* buf, wifi_promiscuous_pkt_type_t type) {
 
   const wifi_promiscuous_pkt_t* ppkt = (wifi_promiscuous_pkt_t*)buf;
   int rssi = ppkt->rx_ctrl.rssi;
-  repf("WIFI CALLBACK: Retrieving RSSI: %02d, ", rssi);
+  // repf("WIFI CALLBACK: Retrieving RSSI: %02d, ", rssi);
   rep_cb(rssi);
 }
