@@ -138,13 +138,13 @@ node_t* esp_comm::getCurrentSender() {
 
 void receive(const uint8_t* macAddr, const uint8_t* data, int len) {
   // copy data to incoming message
-  re("Received MSG:");
+  re("\r\nReceived MSG:");
   memcpy(&incoming, data, sizeof(incoming));
   cSender.NID = incoming.sNID;
   cSender.DID = incoming.sDID;
   verf("FROM NET:%02x%02x \n", cSender.NID, cSender.DID);
   if (conf.isObserve) {  // Check next neighbour reception
-    reln("Network alive confirmed \n");
+    reln("Network alive confirmed..");
     conf.isObserve = false;
   }
 

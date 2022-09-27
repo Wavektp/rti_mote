@@ -17,9 +17,8 @@ void ir_comm::begin() {
 }
 
 void ir_comm::send() {
-  uint32_t ir_test = IR_ADDRESS_32BIT;
-  IrSender.sendNECRaw(ir_test, IR_REPETITION);
-  repf("IR Signal Sent: %08x", ir_test);
+  IrSender.sendNEC(IR_ADDRESS_16BIT ,DEVICE_ID, IR_REPETITION);
+  repf("IR Signal Sent: %08x", DEVICE_ID);
 }
 
 float ir_comm::rss() {

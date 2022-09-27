@@ -17,8 +17,12 @@
 
 #define IR_ADDRESS_16BIT ((NET_PREFIX << 8) | DEVICE_ID)
 #define IR_ADDRESS_32BIT ((IR_ADDRESS_16BIT << 16) | IR_ADDRESS_16BIT)
-#define IR_CODE_EXAMPLE  0x34
+#define IR_CODE_EXAMPLE  DEVICE_ID
 #define IR_REPETITION    3
+
+#define DECODE_NEC          // Includes Apple and Onkyo
+#define DECODE_DISTANCE     // in case NEC is not received correctly
+
 
 typedef unsigned char byte;
 
