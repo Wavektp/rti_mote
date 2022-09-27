@@ -84,10 +84,10 @@ typedef unsigned char rti_position_scheme_t;
 typedef struct {
   volatile bool isNeighbourExist = false;
   volatile uint8_t neighbourP = 0;
-  int tempRSSI = 0;
-  int tempIR = 0;
-  rti_position_scheme_t pos = 0;
-  neighbour_t neighbour[RTI_NEIGHBOUR_COUNT];
+  volatile int tempRSSI = 0;
+  volatile int tempIR = 0;
+  volatile rti_position_scheme_t pos = 0;
+  volatile neighbour_t neighbour[RTI_NEIGHBOUR_COUNT];
 } rti_info_t;
 
 class RTI {

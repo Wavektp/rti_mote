@@ -1,6 +1,6 @@
 #include "rti.h"
 
-rti_info_t info;
+volatile rti_info_t info;
 esp_comm espC;
 ir_comm irC;
 
@@ -174,14 +174,14 @@ void create_rti_message(message_t* msg, byte type, bool isCompleted) {
     for (int i = 1; i < (RTI_NEIGHBOUR_COUNT + 1); i++) {
       verf("LOOK RSSI INDEX%02x=%02d \n", (i - 1), info.neighbour[i - 1].RSS);
       msg->content[i] = info.neighbour[i - 1].RSS;
-      info.neighbour[i - 1].RSS = 0;  // reset value
+      // info.neighbour[i - 1].RSS = 0;  // reset value
       verf("SET RSSI N%02x=%02d \n", i, msg->content[i]);
     }
     msg->content[RTI_NEIGHBOUR_COUNT + 1] = RTI_MSG_MASK_IR;
     for (int i = (RTI_NEIGHBOUR_COUNT + 2); i < (2 * RTI_NEIGHBOUR_COUNT + 2);
          i++) {
       msg->content[i] = info.neighbour[i - (RTI_NEIGHBOUR_COUNT + 2)].irRSS;
-      info.neighbour[i - (RTI_NEIGHBOUR_COUNT + 2)].irRSS = 0;  // reset value
+      // info.neighbour[i - (RTI_NEIGHBOUR_COUNT + 2)].irRSS = 0;  // reset value
       verf("SET IR N%02x=%02d \n", (i - (RTI_NEIGHBOUR_COUNT + 1)),
            msg->content[i]);
     }
