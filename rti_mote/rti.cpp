@@ -174,14 +174,14 @@ void create_rti_message(message_t* msg, byte type, bool isCompleted) {
     for (int i = 1; i < (RTI_NEIGHBOUR_COUNT + 1); i++) {
       msg->content[i] = info.neighbour[i - 1].RSS;
       info.neighbour[i - 1].RSS = 0;  // reset value
-      verf("SET RSSI N%02x=%02d", i, msg->content[i]);
+      verf("SET RSSI N%02x=%02d \n", i, msg->content[i]);
     }
     msg->content[RTI_NEIGHBOUR_COUNT + 1] = RTI_MSG_MASK_IR;
     for (int i = (RTI_NEIGHBOUR_COUNT + 2); i < (2 * RTI_NEIGHBOUR_COUNT + 2);
          i++) {
       msg->content[i] = info.neighbour[i - (RTI_NEIGHBOUR_COUNT + 2)].irRSS;
       info.neighbour[i - (RTI_NEIGHBOUR_COUNT + 2)].irRSS = 0;  // reset value
-      verf("SET RSSI N%02x=%02d", (i - (RTI_NEIGHBOUR_COUNT + 1)), msg->content[i]);
+      verf("SET IR N%02x=%02d \n", (i - (RTI_NEIGHBOUR_COUNT + 1)), msg->content[i]);
     }
     msg->content[(2 * RTI_NEIGHBOUR_COUNT + 2)] = RTI_MSG_MASK_END;
     for (int i = 2 * RTI_NEIGHBOUR_COUNT + 3; i < MAX_CONTENT_SIZE; i++) {
@@ -266,8 +266,7 @@ void report(int rssi) {
   repf("RTI - REPORT CALLBACK SET TEMP RSSI: %02d \n", info.tempRSSI);
 #if defined(END_DEVICE)
   if (info.isNeighbourExist) {
-    re("RSSI BEFORE SET: ");
-    reln(info.neighbour[info.neighbourP].RSS);
+    repf("RSSI BEFORE SET: %02d \n", info.neighbour[info.neighbourP].RSS);
     info.neighbour[info.neighbourP].RSS = rssi;
     outf("RSSI NEIGHBOUR: %02x%02x P:%02x RSSI:%02d \n",
          info.neighbour[info.neighbourP].node.NID,
@@ -300,19 +299,19 @@ bool checkNeighbourP() {
     if (cS->DID % 2 == 0)
       return false;
     ver("Neighbour on ODD Side - ");
-    byte nID = (cS->DID / 2);
+    uint8_t nID = (cS->DID / 2);
   }
   if CHECKFLAG (info.pos, EVEN_SIDE_NEIGHBOUR_FLAG) {
     if (cS->DID % 2 == 1)
       return false;
     ver("Neighbour on EVEN Side - ");
-    byte nID = (cS->NID / 2) - 1;
+    uint8_t nID = (cS->NID / 2) - 1;
   }
   if (nID >= RTI_NEIGHBOUR_COUNT) {
     ver("Neigbour ID out of bound");
     return false;
   }
-  info.neighbourP = nID;
+  info.neighbourP = (uint8_t)nID;
   info.isNeighbourExist = true;
   verf("SET NID:%02d \n", nID);
   return true;

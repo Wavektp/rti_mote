@@ -33,7 +33,7 @@ class ir_comm;
 
 class ir_comm {
  private:
-  int* p_write;
+  volatile int* p_write;
 
  public:
   /**
@@ -47,6 +47,6 @@ class ir_comm {
   void send();
   float rss();
   void receive();
-  void set_p_write(int* irRSS);
+  void set_p_write(volatile int* irRSS);
 };
 #endif /*IR_COMM_H*/

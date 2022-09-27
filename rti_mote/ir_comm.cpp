@@ -17,7 +17,7 @@ void ir_comm::begin() {
 }
 
 void ir_comm::send() {
-  IrSender.sendNEC(IR_ADDRESS_16BIT ,DEVICE_ID, IR_REPETITION);
+  IrSender.sendNEC(IR_ADDRESS_16BIT, DEVICE_ID, IR_REPETITION);
   repf("IR Signal Sent: %08x", DEVICE_ID);
 }
 
@@ -34,19 +34,19 @@ void ir_comm::receive() {
     re("Received command:");
     re(IrReceiver.decodedIRData.command);
     reln(":Write IR reception BOOLEAN value");
-    if (IrReceiver.decodedIRData.protocol == UNKNOWN) {
-      Serial.println(
-          F("Received noise or an unknown (or not yet enabled) protocol"));
-      // We have an unknown protocol here, print more info
-      IrReceiver.printIRResultRawFormatted(&Serial, true);
-    }
-    Serial.println();
+    // if (IrReceiver.decodedIRData.protocol == UNKNOWN) {
+    //   Serial.println(
+    //       F("Received noise or an unknown (or not yet enabled) protocol"));
+    //   // We have an unknown protocol here, print more info
+    //   IrReceiver.printIRResultRawFormatted(&Serial, true);
+    // }
+    // Serial.println();
 
     IrReceiver.resume();  // Enable receiving of the next value
   }
 }
 
-void ir_comm::set_p_write(int* irRSS) {
+void ir_comm::set_p_write(volatile int* irRSS) {
   *irRSS = 0;
   p_write = irRSS;
   receive();

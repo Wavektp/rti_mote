@@ -57,8 +57,8 @@
 
 typedef struct {
   node_t node;
-  int irRSS = 0;
-  int RSS = 0;
+  volatile int irRSS = 0;
+  volatile int RSS = 0;
 } neighbour_t;
 
 /************************************************************************
