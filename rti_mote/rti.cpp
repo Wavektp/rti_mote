@@ -237,7 +237,7 @@ void receive(message_t* incoming) {
       verf("SET RSSI N%02x=%02d: ", info.neighbourP,
            info.neighbour[info.neighbourP].RSS);
       verf("Set IR Pointer to NEIGHBOUR %02x \n", info.neighbourP);
-      irC.set_p_write(&info.neighbour[info.neighbourP].RSS);
+      irC.set_p_write(&info.neighbour[info.neighbourP].irRSS);
     } else {
       verln("Set IR Pointer to TEMP IR \n");
       irC.set_p_write(&info.tempIR);
@@ -303,13 +303,13 @@ bool checkNeighbourP() {
     if (cS->DID % 2 == 0)
       return false;
     ver("Neighbour on ODD Side - ");
-    uint8_t nID = (cS->DID / 2);
+    nID = (cS->DID / 2);
   }
   if CHECKFLAG (info.pos, EVEN_SIDE_NEIGHBOUR_FLAG) {
     if (cS->DID % 2 == 1)
       return false;
     ver("Neighbour on EVEN Side - ");
-    uint8_t nID = (cS->NID / 2) - 1;
+    nID = (cS->DID / 2) - 1;
   }
   if (nID >= RTI_NEIGHBOUR_COUNT) {
     ver("Neigbour ID out of bound");
