@@ -27,11 +27,11 @@ float ir_comm::rss() {
 
 void ir_comm::receive() {
   if (IrReceiver.decode()) {
+    re("Received command:");
     IrReceiver.printIRResultShort(&Serial);
     IrReceiver.printIRSendUsage(&Serial);
     // TODO keep value to evaluate RTI
     *p_write = 1;
-    re("Received command:");
     re(IrReceiver.decodedIRData.command);
     reln(":Write IR reception BOOLEAN value");
     // if (IrReceiver.decodedIRData.protocol == UNKNOWN) {

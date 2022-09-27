@@ -21,7 +21,7 @@
 #define IR_REPETITION    3
 
 #define DECODE_NEC          // Includes Apple and Onkyo
-#define DECODE_DISTANCE     // in case NEC is not received correctly
+// #define DECODE_DISTANCE     // in case NEC is not received correctly
 
 
 typedef unsigned char byte;
