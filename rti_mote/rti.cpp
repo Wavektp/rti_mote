@@ -249,6 +249,7 @@ void receive(message_t* incoming) {
 #if defined(ROOT_NODE)
     create_rti_message(m, MESSAGE_TYPE_BEACON, true);
 #endif /*ROOT_NODE*/
+    delay(10);
     espC.send();
   }
 }
