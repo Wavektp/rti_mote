@@ -249,7 +249,7 @@ void receive(message_t* incoming) {
       verf("Set IR Pointer to NEIGHBOUR %02x \n", info.neighbourP);
       irC.set_p_write(&info.neighbour[info.neighbourP].irRSS);
     } else {
-      verln("Set IR Pointer to TEMP IR \n");
+      ver("Set IR Pointer to TEMP IR \n");
       irC.set_p_write(&info.tempIR);
     }
 #endif
@@ -296,7 +296,7 @@ bool checkNeighbourP() {
   info.sSetRSS = false;
   // get currect sender from communication module
   node_t* cS = espC.getCurrentSender();
-  verf("CHECK NEIGHBOUR: SIDEWAY SCHEME: SID:%02x: ", cS->DID);
+  verf("\r\nCHECK NEIGHBOUR: SIDEWAY SCHEME: SID:%02x: ", cS->DID);
   if (cS->DID == 0) {
     verln("ROOT NODE detected \n");
     return false;
@@ -318,7 +318,7 @@ bool checkNeighbourP() {
     ver("Neigbour ID out of bound");
     return false;
   }
-  verf("SET NID:%02d \n - Set flag for RSSI record", nID);
+  verf("SET NID:%02d - Set flag for RSSI record \n", nID);
   info.neighbourP = (uint8_t)nID;
   info.sSetRSS = true;
   return true;
