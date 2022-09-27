@@ -137,7 +137,6 @@ node_t* esp_comm::getCurrentSender() {
 }
 
 void receive(const uint8_t* macAddr, const uint8_t* data, int len) {
-  esp_task_wdt_reset();
   // copy data to incoming message
   re("Received MSG:");
   memcpy(&incoming, data, sizeof(incoming));

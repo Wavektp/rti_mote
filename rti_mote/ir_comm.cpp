@@ -19,8 +19,7 @@ void ir_comm::begin() {
 void ir_comm::send() {
   uint32_t ir_test = IR_ADDRESS_32BIT;
   IrSender.sendNECRaw(ir_test, IR_REPETITION);
-  re("IR Signal Sent: ");
-  reln(ir_test);
+  repf("IR Signal Sent: %08x", ir_test);
 }
 
 float ir_comm::rss() {
@@ -51,4 +50,5 @@ void ir_comm::receive() {
 void ir_comm::set_p_write(int* irRSS) {
   *irRSS = 0;
   p_write = irRSS;
+  receive();
 }

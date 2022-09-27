@@ -12,11 +12,11 @@ bool checkNeighbourP();
 
 void RTI::begin() {
   // Set watchdog timer
-  // outln("...Initialize watchdog");
-  // out("RESET TIMEOUT: ");
-  // outln(RESET_TIMEOUT);
-  // esp_task_wdt_init(RESET_TIMEOUT, true);
-  // esp_task_wdt_add(NULL);
+  outln("\r\n...Initialize watchdog");
+  out("RESET TIMEOUT: ");
+  outln(RESET_TIMEOUT);
+  esp_task_wdt_init(RESET_TIMEOUT, true);
+  esp_task_wdt_add(NULL);
 
   espC.begin((recv_cb_t)&receive, (report_cb_t)&report);
   outln("\r\n... initialize RTI Protocols");
@@ -103,12 +103,12 @@ void msgToStr(message_t* msg, char* str) {
   char st[RTI_STR_SIZE];
   sniprintf(st, RTI_PREFIX_STR_SIZE, RTI_PREFIX_STR, msg->type, msg->msgID,
             msg->sNID, msg->sDID, msg->rNID, msg->rDID, msg->nNID, msg->nDID);
-  ver("MSG String:PREFIX: ");
+  // ver("MSG String:PREFIX: ");
   st[RTI_PREFIX_STR_SIZE] = 0;
-  ver(st);
+  // ver(st);
   if (msg->type == MESSAGE_TYPE_BEACON) {
     strcat(st, "BEACON");
-    ver(st);
+    // ver(st);
     if (msg->len != 0) {
       outln("Error: Invalid Frame Format: contents on BEACON are not defined");
     }
@@ -116,26 +116,28 @@ void msgToStr(message_t* msg, char* str) {
     size_t neighbourCount = (msg->len / 2 - 1);
     if (msg->content[0] != RTI_MSG_MASK_RSS) {
       outln("Error: Invalid Frame Format: not found RSS PREFIX");
+    } else {
+      strcat(st, "REPORT RSSI. \n");
     }
     for (int i = 1; i < (neighbourCount + 1); i++) {
       char temp[RTI_RSS_STR_SIZE];
       sniprintf(temp, RTI_RSS_STR_SIZE, RTI_RSS_STR, i, msg->content[i]);
-      re("\n DEBUG: check concat string: ");
-      reln(temp);
       strcat(st, temp);
+      strcat(st, "\r\n");
     }
     if (msg->content[(neighbourCount + 1)] != RTI_MSG_MASK_IR) {
       out("Error: Invalid Frame Format: not found IR PREFIX");
+    } else {
+      strcat(st, "REPORT IR. \n");
     }
     for (int i = (neighbourCount + 2); i < (2 * neighbourCount + 2); i++) {
       char temp[RTI_IR_STR_SIZE];
-      sniprintf(temp, RTI_IR_STR_SIZE, RTI_IR_STR, (i - (neighbourCount + 2)),
+      sniprintf(temp, RTI_IR_STR_SIZE, RTI_IR_STR, (i - (neighbourCount + 1)),
                 msg->content[i]);
       strcat(st, temp);
+      strcat(st, "\r\n");
     }
   }
-  re("MESSAGE TO COPY:");
-  reln(st);
   strcpy(str, st);
 }
 
@@ -215,6 +217,7 @@ void receive(message_t* incoming) {
     // Still no action
   }
   if (incoming->type == MESSAGE_TYPE_CONTENT) {
+    esp_task_wdt_reset();
 #if defined(ROOT_NODE)
     re("CONTENT received: \n");
     char outStr[RTI_STR_SIZE];
@@ -225,8 +228,8 @@ void receive(message_t* incoming) {
     re("CONTENT received..\n");
     if (checkNeighbourP()) {
       info.neighbour[info.neighbourP].RSS = info.tempRSSI;
-      irC.set_p_write(&info.neighbour[info.neighbourP].RSS);
       verf("Set IR Pointer to NEIGHBOUR %02x \n", info.neighbourP);
+      irC.set_p_write(&info.neighbour[info.neighbourP].RSS);
     } else {
       verln("Set IR Pointer to TEMP IR");
       irC.set_p_write(&info.tempIR);
