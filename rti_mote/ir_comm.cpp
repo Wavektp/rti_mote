@@ -21,7 +21,7 @@ void ir_comm::send() {
   repf("IR Signal Sent: %08x", DEVICE_ID);
 }
 
-float ir_comm::rss() {
+uint16_t ir_comm::rss() {
   return analogRead(IR_RECEIVE_PIN);
 }
 
@@ -31,7 +31,13 @@ void ir_comm::receive() {
   //   IrReceiver.printIRResultShort(&Serial);
   //   IrReceiver.printIRSendUsage(&Serial);
   //   // TODO keep value to evaluate RTI
-  //   *p_write = 1;
+  if (sIRRecord) {
+    uint16_t ir = rss();
+    if (ir) {
+      verf("Set IR = %04d", ir);
+      *p_write = ir;
+    }
+  }  
   //   re(IrReceiver.decodedIRData.command);
   //   reln(":Write IR reception BOOLEAN value");
   //   if (IrReceiver.decodedIRData.protocol == UNKNOWN) {
@@ -49,5 +55,6 @@ void ir_comm::receive() {
 void ir_comm::set_p_write(volatile int* irRSS) {
   *irRSS = 0;
   p_write = irRSS;
+  sIRRecord = true;
   receive();
 }

@@ -2,14 +2,14 @@
  *                  DEVICE SETTING                         *
  ***********************************************************/
 #define NET_PREFIX 0x10
-#define DEVICE_ID  2
+#define DEVICE_ID  4
 #if (DEVICE_ID == 0)
   #define ROOT_NODE  // ROOT NODE
 #else
   #define END_DEVICE  // END DEVICE
 #endif
-#define RESET_TIMEOUT 10000
-#define RTI_TIMEOUT   2000
+#define RESET_TIMEOUT 3       // [s]
+#define RTI_TIMEOUT   1000    // [ms]
 /***********************************************************
  *                  RTI SETTING                            *
  ***********************************************************/

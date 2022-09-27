@@ -36,6 +36,7 @@ class ir_comm {
   volatile int* p_write;
 
  public:
+  volatile bool sIRRecord = false;
   /**
    * @brief initialise IR communication with a specified TX PIN
    *
@@ -45,7 +46,7 @@ class ir_comm {
   /// @brief initialise IR communication
   void begin();
   void send();
-  float rss();
+  uint16_t rss();
   void receive();
   void set_p_write(volatile int* irRSS);
 };

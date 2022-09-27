@@ -142,7 +142,7 @@ void receive(const uint8_t* macAddr, const uint8_t* data, int len) {
   memcpy(&incoming, data, sizeof(incoming));
   cSender.NID = incoming.sNID;
   cSender.DID = incoming.sDID;
-  verf("FROM NET:%02x%02x \n", cSender.NID, cSender.DID);
+  verf("FROM N:%02x%02x \n", cSender.NID, cSender.DID);
   if (conf.isObserve) {  // Check next neighbour reception
     reln("Network alive confirmed..");
     conf.isObserve = false;

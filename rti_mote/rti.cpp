@@ -172,18 +172,18 @@ void create_rti_message(message_t* msg, byte type, bool isCompleted) {
     msg->len = 2 * RTI_NEIGHBOUR_COUNT + 2;
     msg->content[0] = RTI_MSG_MASK_RSS;
     for (int i = 1; i < (RTI_NEIGHBOUR_COUNT + 1); i++) {
-      verf("LOOK RSSI INDEX%02x=%02d \n", (i - 1), info.neighbour[i - 1].RSS);
+      // verf("LOOK RSSI I%02x=%02d \n", (i - 1), info.neighbour[i - 1].RSS);
       msg->content[i] = info.neighbour[i - 1].RSS;
       // info.neighbour[i - 1].RSS = 0;  // reset value
-      verf("SET RSSI N%02x=%02d \n", i, msg->content[i]);
+      // verf("SET RSSI N%02x=%02d \n", i, msg->content[i]);
     }
     msg->content[RTI_NEIGHBOUR_COUNT + 1] = RTI_MSG_MASK_IR;
     for (int i = (RTI_NEIGHBOUR_COUNT + 2); i < (2 * RTI_NEIGHBOUR_COUNT + 2);
          i++) {
       msg->content[i] = info.neighbour[i - (RTI_NEIGHBOUR_COUNT + 2)].irRSS;
-      // info.neighbour[i - (RTI_NEIGHBOUR_COUNT + 2)].irRSS = 0;  // reset value
-      verf("SET IR N%02x=%02d \n", (i - (RTI_NEIGHBOUR_COUNT + 1)),
-           msg->content[i]);
+      // info.neighbour[i - (RTI_NEIGHBOUR_COUNT + 2)].irRSS = 0;  // reset
+      // value verf("SET IR N%02x=%02d \n", (i - (RTI_NEIGHBOUR_COUNT + 1)),
+      //      msg->content[i]);
     }
     msg->content[(2 * RTI_NEIGHBOUR_COUNT + 2)] = RTI_MSG_MASK_END;
     for (int i = 2 * RTI_NEIGHBOUR_COUNT + 3; i < MAX_CONTENT_SIZE; i++) {
@@ -205,37 +205,47 @@ void RTI::routine() {
   // reception of IR signal
   irC.receive();
 #endif /*END_DEVICE*/
-  if (espC.checkTimeout(RTI_TIMEOUT)) {
-    // Next node does not tranmit assuming incorrect reception, repeat the last
-    // message -> resend
+  if (info.sPending) {
+    info.sPending = false;
+    // send ESP-NOW and reset
+    message_t* m = espC.get_outgoing();
+#if defined(END_DEVICE)
+    // Create CONTENT message
+    create_rti_message(m, MESSAGE_TYPE_CONTENT, true);
+#endif /*END_DEVICE*/
+#if defined(ROOT_NODE)
+    // Create BEACON message
+    create_rti_message(m, MESSAGE_TYPE_BEACON, true);
+#endif /*ROOT_NODE*/
+    delay(50);
     espC.send();
   }
-  // reset watchdog
+  if (espC.checkTimeout(RTI_TIMEOUT)) {
+    // Next node does not tranmit assuming incorrect reception, repeat the
+    // last message -> resend
+    espC.send();
+  }
 }
 
 void receive(message_t* incoming) {
   esp_task_wdt_reset();
-  info.isNeighbourExist = false;
+  info.sSetRSS = false;
+  irC.sIRRecord = false;
   // copy data to incoming message
   re("RTI CALLBACK: ");
   if (incoming->type == MESSAGE_TYPE_BEACON) {
     re("BEACON received: ");
-    // Still no action
   }
   if (incoming->type == MESSAGE_TYPE_CONTENT) {
 #if defined(ROOT_NODE)
     re("CONTENT received: \n");
     char outStr[RTI_STR_SIZE];
     msgToStr(incoming, outStr);
-    outln(outStr);
+    out(outStr);
 #endif
 #if defined(END_DEVICE)
     re("CONTENT received: ");
     if (checkNeighbourP()) {
-      verf("Attempt RSSI N%02x=%02d: ", info.neighbourP, info.tempRSSI);
-      info.neighbour[info.neighbourP].RSS = info.tempRSSI;
-      verf("SET RSSI N%02x=%02d: ", info.neighbourP,
-           info.neighbour[info.neighbourP].RSS);
       verf("Set IR Pointer to NEIGHBOUR %02x \n", info.neighbourP);
       irC.set_p_write(&info.neighbour[info.neighbourP].irRSS);
     } else {
@@ -248,35 +258,28 @@ void receive(message_t* incoming) {
   verf("THIS N:%02x%02x \n", NET_PREFIX, DEVICE_ID);
   if (incoming->nNID == NET_PREFIX &&
       incoming->nDID == DEVICE_ID) {  // if this node is the next sender
-    reln("TOKEN RECEIVED..");
-    delay(1);
-    // send ESP-NOW and reset
-    message_t* m = espC.get_outgoing();
+    reln("TOKEN RECEIVED..SET flag on pending message");
+    info.sPending = true;
 #if defined(END_DEVICE)
     // send IR
     irC.send();
-    create_rti_message(m, MESSAGE_TYPE_CONTENT, true);
 #endif /*END_DEVICE*/
-#if defined(ROOT_NODE)
-    create_rti_message(m, MESSAGE_TYPE_BEACON, true);
-#endif /*ROOT_NODE*/
-    delay(100);
-    espC.send();
   }
 }
 
 void report(int rssi) {
   info.tempRSSI = rssi;
-  repf("RTI - REPORT CALLBACK SET TEMP RSSI: %02d \n", info.tempRSSI);
+  verf("RTI - REPORT CALLBACK SET RSSI: %02d \n", info.tempRSSI);
 #if defined(END_DEVICE)
-  if (info.isNeighbourExist) {
-    repf("RSSI BEFORE SET: %02d \n", info.neighbour[info.neighbourP].RSS);
-    info.neighbour[info.neighbourP].RSS = rssi;
-    outf("RSSI NEIGHBOUR: %02x%02x P:%02x RSSI:%02d \n",
+  if (info.sSetRSS) {
+    verf("Attempt RSSI N%02x=%02d: ", info.neighbourP, info.tempRSSI);
+    verf("RSSI BEFORE SET: %02d \n", info.neighbour[info.neighbourP].RSS);
+    info.neighbour[info.neighbourP].RSS = info.tempRSSI;
+    repf("RSSI NEIGHBOUR: %02x%02x P:%02x RSSI:%02d \n",
          info.neighbour[info.neighbourP].node.NID,
          info.neighbour[info.neighbourP].node.DID, info.neighbourP,
          info.neighbour[info.neighbourP].RSS);
-    info.isNeighbourExist = false;
+    info.sSetRSS = false;
   }
 #endif /*END_DEVICE*/
 }
@@ -290,7 +293,7 @@ void RTI::checkNeighbourP() {
 #if defined(RTI_SIDEWAY_SCHEME)
 bool checkNeighbourP() {
   info.neighbourP = RTI_NEIGHBOUR_COUNT;
-  info.isNeighbourExist = false;
+  info.sSetRSS = false;
   // get currect sender from communication module
   node_t* cS = espC.getCurrentSender();
   verf("CHECK NEIGHBOUR: SIDEWAY SCHEME: SID:%02x: ", cS->DID);
@@ -315,9 +318,9 @@ bool checkNeighbourP() {
     ver("Neigbour ID out of bound");
     return false;
   }
-  verf("SET NID:%02d \n", nID);
+  verf("SET NID:%02d \n - Set flag for RSSI record", nID);
   info.neighbourP = (uint8_t)nID;
-  info.isNeighbourExist = true;
+  info.sSetRSS = true;
   return true;
 }
 #endif /*RTI_SIDEWAY_POSITION*/
