@@ -19,7 +19,7 @@ void RTI::begin() {
   // esp_task_wdt_add(NULL);
 
   espC.begin((recv_cb_t)&receive, (report_cb_t)&report);
-  outln("... initialize RTI Protocols");
+  outln("\r\n... initialize RTI Protocols");
 
   out("DEVICE ID: ");
   outln(DEVICE_ID);
@@ -68,8 +68,8 @@ void RTI::begin() {
   }
 
   #endif /*RTI_SIDEWAY_SCHEME*/
-  outln("RECTANGULAR SCHEME");
   #if defined(RTI_RECTANGULAR_SCHEME)
+  outln("RECTANGULAR SCHEME");
   for (int i = 0; i < RTI_NEIGHBOUR_COUNT; i++) {
     info.neighbour[i].node.NID = NET_PREFIX;
     byte dID = i + (RECTANGULAR_SIDE * SIDE_NODE_COUNT + 2);
@@ -81,8 +81,8 @@ void RTI::begin() {
     }
   }
   #endif /*RTI_RECTANGULAR_SCHEME*/
-  outln("CUSTOM SCHEME");
   #if defined(RTI_CUSTOM_SCHEME)
+  outln("CUSTOM SCHEME");
     #error In CUSTOM SCHEME, neighbours need to be manually defined
   #endif
   out("NEIGHBOUR COUNT: ");
