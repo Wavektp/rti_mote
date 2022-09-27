@@ -23,9 +23,6 @@
 #define DECODE_NEC          // Includes Apple and Onkyo
 // #define DECODE_DISTANCE     // in case NEC is not received correctly
 
-
-typedef unsigned char byte;
-
 /**
  * @brief The algorithm to send an IR signal and estimate RSS.
  */

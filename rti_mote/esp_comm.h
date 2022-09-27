@@ -1,7 +1,6 @@
 #ifndef ESP_COMM_H
 #define ESP_COMM_H
 
-//#include <Arduino.h>
 #include <WiFi.h>
 #include <esp_now.h>
 #include "esp_task_wdt.h"
