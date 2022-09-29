@@ -5,31 +5,31 @@
 #include "setting.h"
 
 #define IR_TX_PIN 23
-#define IR_RX_PIN 17
+#define IR_RX_PIN 34
 
-#if !defined(ESP_ARDUINO_VERSION_VAL)
-  #define ESP_ARDUINO_VERSION_VAL(major, minor, patch) 12345678
-#endif
-#if ESP_ARDUINO_VERSION <= ESP_ARDUINO_VERSION_VAL(2, 0, 2)
-  #define TONE_LEDC_CHANNEL \
-    1  // Using channel 1 makes tone() independent of receiving timer -> No need
-       // to stop receiving timer.
-void tone(uint8_t aPinNumber, unsigned int aFrequency) {
-  ledcAttachPin(aPinNumber, TONE_LEDC_CHANNEL);
-  ledcWriteTone(TONE_LEDC_CHANNEL, aFrequency);
-}
-void tone(uint8_t aPinNumber,
-          unsigned int aFrequency,
-          unsigned long aDuration) {
-  ledcAttachPin(aPinNumber, TONE_LEDC_CHANNEL);
-  ledcWriteTone(TONE_LEDC_CHANNEL, aFrequency);
-  delay(aDuration);
-  ledcWriteTone(TONE_LEDC_CHANNEL, 0);
-}
-void noTone(uint8_t aPinNumber) {
-  ledcWriteTone(TONE_LEDC_CHANNEL, 0);
-}
-#endif
+// #if !defined(ESP_ARDUINO_VERSION_VAL)
+//   #define ESP_ARDUINO_VERSION_VAL(major, minor, patch) 12345678
+// #endif
+// #if ESP_ARDUINO_VERSION <= ESP_ARDUINO_VERSION_VAL(2, 0, 2)
+//   #define TONE_LEDC_CHANNEL \
+//     1  // Using channel 1 makes tone() independent of receiving timer -> No need
+//        // to stop receiving timer.
+// void tone(uint8_t aPinNumber, unsigned int aFrequency) {
+//   ledcAttachPin(aPinNumber, TONE_LEDC_CHANNEL);
+//   ledcWriteTone(TONE_LEDC_CHANNEL, aFrequency);
+// }
+// void tone(uint8_t aPinNumber,
+//           unsigned int aFrequency,
+//           unsigned long aDuration) {
+//   ledcAttachPin(aPinNumber, TONE_LEDC_CHANNEL);
+//   ledcWriteTone(TONE_LEDC_CHANNEL, aFrequency);
+//   delay(aDuration);
+//   ledcWriteTone(TONE_LEDC_CHANNEL, 0);
+// }
+// void noTone(uint8_t aPinNumber) {
+//   ledcWriteTone(TONE_LEDC_CHANNEL, 0);
+// }
+// #endif
 
 #define IR_RECEIVE_PIN  15  // D15
 #define IR_SEND_PIN     4   // D4

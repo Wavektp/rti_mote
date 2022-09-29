@@ -64,14 +64,13 @@ void ir_comm::receive() {
   // IrReceiver.resume();  // Enable receiving of the next value
   // }
   if (sIRRecord) {
-    while(!analogRead(IR_RX_PIN));
-    // uint16_t ir = analogRead(IR_RX_PIN);
-    // delayMicroseconds(200);
-    // verf("IR Analog Read: %02i..", ir);
-    // if (ir) {
-    //   *p_write = ir;
-    //   verf("Set IR = %04i \n", ir);
-    // }
+    uint16_t ir = analogRead(IR_RX_PIN);
+    delayMicroseconds(200);
+    verf("IR Analog Read: %02i..", ir);
+    if (ir) {
+      *p_write = ir;
+      verf("Set IR = %04i \n", ir);
+    }
   }
 }
 
