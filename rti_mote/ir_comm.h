@@ -42,6 +42,7 @@
 #define IR_REPETITION    5
 
 #define DECODE_NEC  // Includes Apple and Onkyo
+#define NO_SIGNAL_LVL   4095
 // #define DECODE_DISTANCE     // in case NEC is not received correctly
 // #define NO_DECODER
 

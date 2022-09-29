@@ -67,11 +67,11 @@ void ir_comm::receive() {
     uint16_t ir = analogRead(IR_RX_PIN);
     // verf("IR Analog Read: %02i..", ir);
     uint8_t c = 0;
-    while ((ir == 4095) && c < 100) {
+    while ((ir == NO_SIGNAL_LVL) && c < 100) {
       ir = analogRead(IR_RX_PIN);
       c++;
     }
-    if (ir != 4095) {
+    if (ir != NO_SIGNAL_LVL) {
       *p_write = ir;
       verf("Set IR = %04i \n", ir);
     }
@@ -79,7 +79,7 @@ void ir_comm::receive() {
 }
 
 void ir_comm::set_p_write(volatile int* irRSS) {
-  *irRSS = 0;
+  *irRSS = NO_SIGNAL_LVL;
   p_write = irRSS;
   sIRRecord = true;
   verln("Set Flag IR reception");
