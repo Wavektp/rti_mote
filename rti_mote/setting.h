@@ -4,7 +4,7 @@
  *                  DEVICE SETTING                         *
  ***********************************************************/
 #define NET_PREFIX 0x10
-#define DEVICE_ID  0
+#define DEVICE_ID  1
 #if (DEVICE_ID == 0)
   #define ROOT_NODE  // ROOT NODE
 #else
@@ -12,6 +12,10 @@
 #endif
 #define RESET_TIMEOUT 3       // [s]
 #define RTI_TIMEOUT   1000    // [ms]
+#define SEND_DELAY    50      // [ms]
+
+typedef unsigned long timestamp_t;
+
 /***********************************************************
  *                  RTI SETTING                            *
  ***********************************************************/

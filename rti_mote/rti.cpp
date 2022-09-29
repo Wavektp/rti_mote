@@ -210,6 +210,10 @@ void RTI::routine() {
     // send ESP-NOW and reset
     message_t* m = espC.get_outgoing();
 #if defined(END_DEVICE)
+    timestamp_t stamp = millis();
+    while (millis() - stamp < SEND_DELAY) {
+      irC.send();
+    }
     // Create CONTENT message
     create_rti_message(m, MESSAGE_TYPE_CONTENT, true);
 #endif /*END_DEVICE*/
@@ -217,7 +221,6 @@ void RTI::routine() {
     // Create BEACON message
     create_rti_message(m, MESSAGE_TYPE_BEACON, true);
 #endif /*ROOT_NODE*/
-    delay(50);
     espC.send();
   }
   if (espC.checkTimeout(RTI_TIMEOUT)) {
@@ -231,6 +234,7 @@ void receive(message_t* incoming) {
   esp_task_wdt_reset();
   info.sSetRSS = false;
   irC.sIRRecord = false;
+  verln("Unflag IR Reception");
   // copy data to incoming message
   re("RTI CALLBACK: ");
   if (incoming->type == MESSAGE_TYPE_BEACON) {
@@ -260,10 +264,6 @@ void receive(message_t* incoming) {
       incoming->nDID == DEVICE_ID) {  // if this node is the next sender
     reln("TOKEN RECEIVED..SET flag on pending message");
     info.sPending = true;
-#if defined(END_DEVICE)
-    // send IR
-    irC.send();
-#endif /*END_DEVICE*/
   }
 }
 

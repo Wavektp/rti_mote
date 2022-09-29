@@ -8,7 +8,7 @@ void ir_comm::begin(unsigned int txPIN) {
   IrSender.begin(txPIN);
   IrReceiver.begin(IR_RECEIVE_PIN, ENABLE_LED_FEEDBACK);
 
-  out(F("Ready to receive IR signals of protocols"));
+  out(F("Ready to receive IR signals of protocols \n"));
   printActiveIRProtocols(&Serial);
 }
 
@@ -17,8 +17,8 @@ void ir_comm::begin() {
 }
 
 void ir_comm::send() {
-  IrSender.sendNEC(IR_ADDRESS_16BIT, DEVICE_ID, IR_REPETITION);
   repf("IR Signal Sent: %08x \n", DEVICE_ID);
+  IrSender.sendNEC(IR_ADDRESS_16BIT, DEVICE_ID, IR_REPETITION);
 }
 
 uint16_t ir_comm::rss() {
@@ -33,8 +33,9 @@ void ir_comm::receive() {
   //   // TODO keep value to evaluate RTI
   if (sIRRecord) {
     uint16_t ir = rss();
+    verf("IR Analog Read: %02d", ir);
     if (ir) {
-      verf("Set IR = %04d", ir);
+      verf("Set IR = %04d \n", ir);
       *p_write = ir;
     }
   }  
@@ -56,5 +57,6 @@ void ir_comm::set_p_write(volatile int* irRSS) {
   *irRSS = 0;
   p_write = irRSS;
   sIRRecord = true;
+  verln("Set Flag IR reception");
   receive();
 }

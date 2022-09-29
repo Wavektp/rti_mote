@@ -72,8 +72,6 @@ typedef struct {
   #define NEXT_NEIGHBOUR_DEVICE_ID 0
 #endif
 
-typedef unsigned long timestamp_t;
-
 /// @brief Class for managing ESP-NOW
 class esp_comm;
 
