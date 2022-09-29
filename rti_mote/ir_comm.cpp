@@ -69,6 +69,7 @@ void ir_comm::receive() {
     uint8_t c = 0;
     while ((ir == 4095) && c < 100) {
       ir = analogRead(IR_RX_PIN);
+      c++;
     }
     if (ir != 4095) {
       *p_write = ir;
