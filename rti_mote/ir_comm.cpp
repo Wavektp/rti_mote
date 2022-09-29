@@ -6,7 +6,7 @@ void ir_comm::begin(unsigned int txPIN) {
           "\r\nUsing library version " VERSION_IRREMOTE));
   pinMode(IR_RECEIVE_PIN, INPUT);
   IrSender.begin(txPIN);
-  // IrReceiver.begin(IR_RECEIVE_PIN, ENABLE_LED_FEEDBACK);
+  IrReceiver.begin(IR_RECEIVE_PIN, ENABLE_LED_FEEDBACK);
 
   out(F("Ready to receive IR signals of protocols \n"));
   printActiveIRProtocols(&Serial);
@@ -26,30 +26,30 @@ uint16_t ir_comm::rss() {
 }
 
 void ir_comm::receive() {
-  // if (IrReceiver.decode()) {
-  //   re("Received command:");
-  //   IrReceiver.printIRResultShort(&Serial);
-  //   IrReceiver.printIRSendUsage(&Serial);
-  //   // TODO keep value to evaluate RTI
-  if (sIRRecord) {
-    uint16_t ir = rss();
-    verf("IR Analog Read: %02d", ir);
-    if (ir) {
-      verf("Set IR = %04d \n", ir);
-      *p_write = ir;
-    }
-  }  
-  //   re(IrReceiver.decodedIRData.command);
-  //   reln(":Write IR reception BOOLEAN value");
-  //   if (IrReceiver.decodedIRData.protocol == UNKNOWN) {
-  //     Serial.println(
-  //         F("Received noise or an unknown (or not yet enabled) protocol"));
-  //     // We have an unknown protocol here, print more info
-  //     IrReceiver.printIRResultRawFormatted(&Serial, true);
-  //   }
-  //   Serial.println();
+  if (IrReceiver.decode()) {
+    re("Received IR:");
+    // IrReceiver.printIRResultShort(&Serial);
+    // IrReceiver.printIRSendUsage(&Serial);
+    // // TODO keep value to evaluate RTI
+    // re(IrReceiver.decodedIRData.command);
+    *p_write = 1;
+    reln(":Write IR reception BOOLEAN value");
+    // if (IrReceiver.decodedIRData.protocol == UNKNOWN) {
+    //   Serial.println(
+    //       F("Received noise or an unknown (or not yet enabled) protocol"));
+    //   // We have an unknown protocol here, print more info
+    //   IrReceiver.printIRResultRawFormatted(&Serial, true);
+    // }
+    // Serial.println();
 
-  //   IrReceiver.resume();  // Enable receiving of the next value
+    IrReceiver.resume();  // Enable receiving of the next value
+  }
+  // if (sIRRecord) {
+  //   uint16_t ir = rss();
+  //   verf("IR Analog Read: %02d", ir);
+  //   if (ir) {
+  //     verf("Set IR = %04d \n", ir);
+  //   }
   // }
 }
 
