@@ -65,9 +65,8 @@ void ir_comm::receive() {
   // }
   if (sIRRecord) {
     uint16_t ir = analogRead(IR_RX_PIN);
-    delayMicroseconds(200);
-    verf("IR Analog Read: %02i..", ir);
-    if (ir) {
+    // verf("IR Analog Read: %02i..", ir);
+    if (ir < 4095) {
       *p_write = ir;
       verf("Set IR = %04i \n", ir);
     }
