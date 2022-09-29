@@ -40,8 +40,8 @@ void ir_comm::begin() {
 }
 
 void ir_comm::send() {
-  repf("IR Signal Sent: %08x \n", DEVICE_ID);
-  IrSender.sendNEC(IR_ADDRESS_16BIT, DEVICE_ID, IR_REPETITION);
+  repf("IR Signal Sent: %02x \n", IR_CODE_EXAMPLE);
+  IrSender.sendNEC(IR_ADDRESS_16BIT, IR_CODE_EXAMPLE, IR_REPETITION);
 }
 
 void ir_comm::receive() {
@@ -66,7 +66,11 @@ void ir_comm::receive() {
   if (sIRRecord) {
     uint16_t ir = analogRead(IR_RX_PIN);
     // verf("IR Analog Read: %02i..", ir);
-    if (ir < 4095) {
+    uint8_t c = 0;
+    while ((ir == 4095) && c < 100) {
+      ir = analogRead(IR_RX_PIN);
+    }
+    if (ir != 4095) {
       *p_write = ir;
       verf("Set IR = %04i \n", ir);
     }
