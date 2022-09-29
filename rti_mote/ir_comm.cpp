@@ -4,27 +4,30 @@
 volatile int* p_write;
 volatile bool sIRRecord = false;
 
-void ARDUINO_ISR_ATTR irRecCB() {
-  if (sIRRecord) {
-    detachInterrupt(digitalPinToInterrupt(IR_RECEIVE_PIN));
-    uint16_t ir = analogRead(IR_RECEIVE_PIN);
-    uint8_t c = 0;
-    while ((ir == 0) && (c++ < 100)) {
-      ir = analogRead(IR_RECEIVE_PIN);
-    }
-    verf("CALLBACK IR Analog Read: %02i..", ir);
-    if (ir) {
-      *p_write = ir;
-      verf("Set IR = %04i \n", ir);
-    }
-    attachInterrupt(IR_RECEIVE_PIN, irRecCB, RISING);
-  }
-}
+// void ARDUINO_ISR_ATTR irRecCB() {
+//   if (sIRRecord) {
+//     detachInterrupt(digitalPinToInterrupt(IR_RX_PIN));
+//     uint16_t ir = analogRead(IR_RX_PIN);
+//     uint8_t c = 0;
+//     while ((ir == 0) && (c < 100)) {
+//       ir = analogRead(IR_RX_PIN);
+//       delayMicroseconds(200);
+//       c++;
+//     }
+//     verf("CALLBACK IR Analog Read: %02i..", ir);
+//     if (ir) {
+//       *p_write = ir;
+//       verf("Set IR = %04i \n", ir);
+//     }
+//     attachInterrupt(IR_RX_PIN, irRecCB, FALLING);
+//   }
+// }
+
 void ir_comm::begin(unsigned int txPIN) {
   outln(F("START " __FILE__ " from " __DATE__
           "\r\nUsing library version " VERSION_IRREMOTE));
-  pinMode(IR_RECEIVE_PIN, INPUT_PULLUP);
-  attachInterrupt(IR_RECEIVE_PIN, irRecCB, RISING);
+  pinMode(IR_RX_PIN, INPUT);
+  // attachInterrupt(IR_RX_PIN, irRecCB, FALLING);
   IrSender.begin(txPIN);
   // IrReceiver.begin(IR_RECEIVE_PIN, ENABLE_LED_FEEDBACK);
 
@@ -61,12 +64,14 @@ void ir_comm::receive() {
   // IrReceiver.resume();  // Enable receiving of the next value
   // }
   if (sIRRecord) {
-    uint16_t ir = analogRead(IR_RECEIVE_PIN);
-    verf("IR Analog Read: %02i..", ir);
-    if (ir) {
-      *p_write = ir;
-      verf("Set IR = %04i \n", ir);
-    }
+    while(!analogRead(IR_RX_PIN));
+    // uint16_t ir = analogRead(IR_RX_PIN);
+    // delayMicroseconds(200);
+    // verf("IR Analog Read: %02i..", ir);
+    // if (ir) {
+    //   *p_write = ir;
+    //   verf("Set IR = %04i \n", ir);
+    // }
   }
 }
 

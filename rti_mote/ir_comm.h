@@ -1,33 +1,33 @@
 #ifndef IR_COMM_H
 #define IR_COMM_H
 
-#include "setting.h"
 #include <Arduino.h>
+#include "setting.h"
 
-#ifndef IR_TX_PIN
-  #define IR_TX_PIN 23
-#endif
-#ifndef IR_RX_PIN
-  #define IR_RX_PIN 33
-#endif
+#define IR_TX_PIN 23
+#define IR_RX_PIN 17
 
 #if !defined(ESP_ARDUINO_VERSION_VAL)
-#define ESP_ARDUINO_VERSION_VAL(major, minor, patch) 12345678
+  #define ESP_ARDUINO_VERSION_VAL(major, minor, patch) 12345678
 #endif
-#if ESP_ARDUINO_VERSION  <= ESP_ARDUINO_VERSION_VAL(2, 0, 2)
-#define TONE_LEDC_CHANNEL        1  // Using channel 1 makes tone() independent of receiving timer -> No need to stop receiving timer.
-void tone(uint8_t aPinNumber, unsigned int aFrequency){
-    ledcAttachPin(aPinNumber, TONE_LEDC_CHANNEL);
-    ledcWriteTone(TONE_LEDC_CHANNEL, aFrequency);
+#if ESP_ARDUINO_VERSION <= ESP_ARDUINO_VERSION_VAL(2, 0, 2)
+  #define TONE_LEDC_CHANNEL \
+    1  // Using channel 1 makes tone() independent of receiving timer -> No need
+       // to stop receiving timer.
+void tone(uint8_t aPinNumber, unsigned int aFrequency) {
+  ledcAttachPin(aPinNumber, TONE_LEDC_CHANNEL);
+  ledcWriteTone(TONE_LEDC_CHANNEL, aFrequency);
 }
-void tone(uint8_t aPinNumber, unsigned int aFrequency, unsigned long aDuration){
-    ledcAttachPin(aPinNumber, TONE_LEDC_CHANNEL);
-    ledcWriteTone(TONE_LEDC_CHANNEL, aFrequency);
-    delay(aDuration);
-    ledcWriteTone(TONE_LEDC_CHANNEL, 0);
+void tone(uint8_t aPinNumber,
+          unsigned int aFrequency,
+          unsigned long aDuration) {
+  ledcAttachPin(aPinNumber, TONE_LEDC_CHANNEL);
+  ledcWriteTone(TONE_LEDC_CHANNEL, aFrequency);
+  delay(aDuration);
+  ledcWriteTone(TONE_LEDC_CHANNEL, 0);
 }
-void noTone(uint8_t aPinNumber){
-    ledcWriteTone(TONE_LEDC_CHANNEL, 0);
+void noTone(uint8_t aPinNumber) {
+  ledcWriteTone(TONE_LEDC_CHANNEL, 0);
 }
 #endif
 
@@ -41,7 +41,7 @@ void noTone(uint8_t aPinNumber){
 #define IR_CODE_EXAMPLE  DEVICE_ID
 #define IR_REPETITION    5
 
-#define DECODE_NEC          // Includes Apple and Onkyo
+#define DECODE_NEC  // Includes Apple and Onkyo
 // #define DECODE_DISTANCE     // in case NEC is not received correctly
 // #define NO_DECODER
 
@@ -52,7 +52,6 @@ class ir_comm;
 
 class ir_comm {
  private:
-
  public:
   /**
    * @brief initialise IR communication with a specified TX PIN
