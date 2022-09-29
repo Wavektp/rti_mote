@@ -14,7 +14,7 @@
 #define RTI_TIMEOUT   1000    // [ms]
 #define SEND_DELAY    50      // [ms]
 
-typedef static uint32_t timestamp_t;
+typedef unsigned long timestamp_t;
 
 /***********************************************************
  *                  RTI SETTING                            *

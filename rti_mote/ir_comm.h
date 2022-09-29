@@ -43,6 +43,7 @@ void noTone(uint8_t aPinNumber){
 
 #define DECODE_NEC          // Includes Apple and Onkyo
 // #define DECODE_DISTANCE     // in case NEC is not received correctly
+// #define NO_DECODER
 
 /**
  * @brief The algorithm to send an IR signal and estimate RSS.
@@ -51,10 +52,8 @@ class ir_comm;
 
 class ir_comm {
  private:
-  volatile int* p_write;
 
  public:
-  volatile bool sIRRecord = false;
   /**
    * @brief initialise IR communication with a specified TX PIN
    *
@@ -64,8 +63,8 @@ class ir_comm {
   /// @brief initialise IR communication
   void begin();
   void send();
-  uint16_t rss();
   void receive();
   void set_p_write(volatile int* irRSS);
+  void setFlag(bool b, volatile int* p);
 };
 #endif /*IR_COMM_H*/

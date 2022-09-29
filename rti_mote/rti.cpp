@@ -233,7 +233,7 @@ void RTI::routine() {
 void receive(message_t* incoming) {
   esp_task_wdt_reset();
   info.sSetRSS = false;
-  irC.sIRRecord = false;
+  irC.setFlag(false, &info.tempIR);
   verln("Unflag IR Reception");
   // copy data to incoming message
   re("RTI CALLBACK: ");
