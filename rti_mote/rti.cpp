@@ -117,27 +117,28 @@ void msgToStr(message_t* msg, char* str) {
     if (msg->content[0] != RTI_MSG_MASK_RSS) {
       outln("Error: Invalid Frame Format: not found RSS PREFIX");
     } else {
-      strcat(st, "REPORT RSSI. \n");
+      strcat(st, "~");
     }
     for (int i = 1; i < (neighbourCount + 1); i++) {
       char temp[RTI_RSS_STR_SIZE];
       sniprintf(temp, RTI_RSS_STR_SIZE, RTI_RSS_STR, i, msg->content[i]);
       strcat(st, temp);
-      strcat(st, "\r\n");
+      // strcat(st, "\r\n");
     }
     if (msg->content[(neighbourCount + 1)] != RTI_MSG_MASK_IR) {
       out("Error: Invalid Frame Format: not found IR PREFIX");
     } else {
-      strcat(st, "REPORT IR. \n");
+      strcat(st, "~");
     }
     for (int i = (neighbourCount + 2); i < (2 * neighbourCount + 2); i++) {
       char temp[RTI_IR_STR_SIZE];
       sniprintf(temp, RTI_IR_STR_SIZE, RTI_IR_STR, (i - (neighbourCount + 1)),
                 msg->content[i]);
       strcat(st, temp);
-      strcat(st, "\r\n");
+      // strcat(st, "\r\n");
     }
   }
+  strcat(st, "\n");
   strcpy(str, st);
 }
 
