@@ -37,6 +37,7 @@ typedef unsigned long timestamp_t;
 #define out(x)    Serial.print(x)
 #define outf(...) Serial.printf(__VA_ARGS__)
 #define outln(x)  Serial.println(x)
+#define bout(...) Serial.write(__VA_ARGS__)   
 #if defined(DEBUG_REPORT)
   #define VERBOSE_REPORT
   #define re(x)     Serial.print(x)

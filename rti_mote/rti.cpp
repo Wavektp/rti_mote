@@ -244,9 +244,10 @@ void receive(message_t* incoming) {
   if (incoming->type == MESSAGE_TYPE_CONTENT) {
 #if defined(ROOT_NODE)
     re("CONTENT received: \n");
-    char outStr[RTI_STR_SIZE];
-    msgToStr(incoming, outStr);
-    out(outStr);
+    // char outStr[RTI_STR_SIZE];
+    // msgToStr(incoming, outStr);
+    bout((uint8_t *)incoming, sizeof(incoming));
+    outln();
 #endif
 #if defined(END_DEVICE)
     re("CONTENT received: ");
