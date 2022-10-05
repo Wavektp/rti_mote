@@ -221,6 +221,7 @@ void RTI::routine() {
 #if defined(ROOT_NODE)
     // Create BEACON message
     create_rti_message(m, MESSAGE_TYPE_BEACON, true);
+    bout((uint8_t *)m, sizeof(*m));
 #endif /*ROOT_NODE*/
     espC.send();
   }
@@ -246,7 +247,7 @@ void receive(message_t* incoming) {
     re("CONTENT received: \n");
     // char outStr[RTI_STR_SIZE];
     // msgToStr(incoming, outStr);
-    bout((uint8_t *)incoming, sizeof(incoming));
+    bout((uint8_t *)incoming, sizeof(*incoming));
     outln();
 #endif
 #if defined(END_DEVICE)
