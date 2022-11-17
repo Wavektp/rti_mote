@@ -40,6 +40,7 @@
 #define IR_ADDRESS_32BIT ((IR_ADDRESS_16BIT << 16) | IR_ADDRESS_16BIT)
 #define IR_CODE_EXAMPLE  0x34
 #define IR_REPETITION    5
+#define IR_DELAY         10
 
 #define DECODE_NEC  // Includes Apple and Onkyo
 #define NO_SIGNAL_LVL   4095

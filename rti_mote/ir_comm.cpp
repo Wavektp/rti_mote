@@ -26,24 +26,31 @@ void ir_comm::send() {
 }
 
 void ir_comm::receive() {
-  if (IrReceiver.decode()) {
-  re("Received IR:");
-  IrReceiver.printIRResultShort(&Serial);
-  IrReceiver.printIRSendUsage(&Serial);
-  // TODO keep value to evaluate RTI
-  re(IrReceiver.decodedIRData.command);
-  *p_write = 1;
-  reln(":Write IR reception BOOLEAN value");
-  if (IrReceiver.decodedIRData.protocol == UNKNOWN) {
-    Serial.println(
-        F("Received noise or an unknown (or not yet enabled) protocol"));
-    // We have an unknown protocol here, print more info
-    // IrReceiver.printIRResultRawFormatted(&Serial, true);
+  timestamp_t stamp = millis();
+  while(sIRRecord) {
+    if (IrReceiver.decode()) {
+      re("Received IR:");
+      // IrReceiver.printIRResultShort(&Serial);
+      // IrReceiver.printIRSendUsage(&Serial);
+      // TODO keep value to evaluate RTI
+      re(IrReceiver.decodedIRData.command);
+      *p_write = 1;
+      sIRRecord = false;
+      reln(":Write IR reception BOOLEAN value \n");
+      // if (IrReceiver.decodedIRData.protocol == UNKNOWN) {
+      //   Serial.println(
+      //       F("Received noise or an unknown (or not yet enabled) protocol"));
+      //   // We have an unknown protocol here, print more info
+      //   // IrReceiver.printIRResultRawFormatted(&Serial, true);
+      // }
+      // Serial.println();
+      IrReceiver.resume();  // Enable receiving of the next value
+    }
   }
-  Serial.println();
-
-  IrReceiver.resume();  // Enable receiving of the next value
+  if (stamp - millis() > IR_DELAY) {
+    sIRRecord = false;
   }
+  
 //   if (sIRRecord) {
 //     uint16_t ir = analogRead(IR_RX_PIN);
 //     // verf("IR Analog Read: %02i..", ir);
