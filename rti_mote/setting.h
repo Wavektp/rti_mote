@@ -12,7 +12,7 @@
 #endif
 #define RESET_TIMEOUT 3       // [s]
 #define RTI_TIMEOUT   1000    // [ms]
-#define SEND_DELAY    50      // [ms]
+#define SEND_DELAY    15      // [ms]
 
 typedef unsigned long timestamp_t;
 

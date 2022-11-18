@@ -50,7 +50,6 @@ void ir_comm::receive() {
   if (stamp - millis() > IR_DELAY) {
     sIRRecord = false;
   }
-  
 //   if (sIRRecord) {
 //     uint16_t ir = analogRead(IR_RX_PIN);
 //     // verf("IR Analog Read: %02i..", ir);
