@@ -7,8 +7,8 @@
 #define DEVICE_ID  0
 
 #define RESET_TIMEOUT 3       // [s]
-#define RTI_TIMEOUT   1000    // [ms]
-#define SEND_DELAY    15      // [ms]
+#define RTI_TIMEOUT   20      // [ms]
+#define SEND_DELAY    20      // [ms]
 
 typedef unsigned long timestamp_t;
 
