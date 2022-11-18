@@ -44,7 +44,7 @@
  *  ROOT NODE DEFINITIONS                                               *
  ************************************************************************/
 #if defined(ROOT_NODE)
-  #define START_DELAY         2000
+  #define START_DELAY         200
   #define RTI_NEIGHBOUR_COUNT RTI_NODE_COUNT
 #endif /*ROOT_NODE*/
 /************************************************************************

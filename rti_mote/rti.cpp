@@ -4,6 +4,10 @@ volatile rti_info_t info;
 esp_comm espC;
 ir_comm irC;
 
+#if defined(ROOT_NODE)
+byte msgID = 0;
+#endif /*ROOT_NODE*/
+
 void msgToStr(message_t* msg, char* str);
 void create_rti_message(message_t* msg, byte type, bool isCompleted);
 void receive(message_t* incoming);
@@ -162,6 +166,7 @@ void create_rti_message(message_t* msg, byte type, bool isCompleted) {
   if (type == MESSAGE_TYPE_BEACON) {
     reln("BEACON");
     msg->len = 0;
+    msg->msgID = msgID;
     for (int i = 0; i < MAX_CONTENT_SIZE; i++) {
       msg->content[i] = 0;
     }
@@ -238,9 +243,9 @@ void receive(message_t* incoming) {
   irC.setFlag(false, &info.tempIR);
   verln("Unflag IR Reception");
   // copy data to incoming message
-  re("RTI CALLBACK: ");
+  repf("RTI CALLBACK: ID=%02d", incoming->msgID);
   if (incoming->type == MESSAGE_TYPE_BEACON) {
-    re("BEACON received: ");
+    re("BEACON received: \n");
   }
   if (incoming->type == MESSAGE_TYPE_CONTENT) {
 #if defined(ROOT_NODE)
@@ -264,9 +269,16 @@ void receive(message_t* incoming) {
   verf("NEXT N:%02x%02x, ", incoming->nNID, incoming->nDID);
   verf("THIS N:%02x%02x \n", NET_PREFIX, DEVICE_ID);
   if (incoming->nNID == NET_PREFIX &&
-      incoming->nDID == DEVICE_ID) {  // if this node is the next sender
-    reln("TOKEN RECEIVED..SET flag on pending message");
-    info.sPending = true;
+      incoming->nDID == DEVICE_ID) {  // if this node is the next sender 
+    byte* pID = espC.getMsgID();
+    if (incoming->msgID != (*pID)) {
+      *pID = incoming->msgID;
+      info.sPending = true;
+#if defined(ROOT_NODE)
+      msgID++;
+#endif 
+      reln("TOKEN RECEIVED..SET flag on pending message");
+    }
   }
 }
 

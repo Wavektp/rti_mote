@@ -11,6 +11,7 @@
 
 #define BROADCAST_CODE    0xFF
 #define PLACEHOLDER_CODE  0xAA
+
 #define MAC_ADDR_SIZE     6
 #define MAC_ADDR_STR_SIZE 18
 #define BROADCAST_MAC_ADDRESS                                       \
@@ -25,6 +26,17 @@
         NET_PREFIX, DEVICE_ID                                               \
   }
 
+#define PARENT_MAC_ADDRESS                                                  \
+  {                                                                         \
+    PLACEHOLDER_CODE, PLACEHOLDER_CODE, PLACEHOLDER_CODE, PLACEHOLDER_CODE, \
+        NET_PREFIX, PARENT                                                  \
+  }
+
+#define NEXTHOP_MAC_ADDRESS                                                 \
+  {                                                                         \
+    PLACEHOLDER_CODE, PLACEHOLDER_CODE, PLACEHOLDER_CODE, PLACEHOLDER_CODE, \
+        NET_PREFIX, NEXTHOP                                                 \
+  }
 /******************************************************************************
  * Communication based on ESP-NOW
  *
@@ -62,12 +74,12 @@ typedef struct {
 
 typedef struct {
   bool isObserve = false;
-  byte msg_id;
-  size_t msg_sz;
+  byte msgID = 0;
+  size_t msgSZ;
 } confirmable_t;
 
 #define NEXT_NEIGHBOUR_NET_PREFIX NET_PREFIX
-#define NEXT_NEIGHBOUR_DEVICE_ID  DEVICE_ID + 1
+#define NEXT_NEIGHBOUR_DEVICE_ID  NEXTHOP
 #if NEXT_NEIGHBOUR_DEVICE_ID > RTI_NODE_COUNT
   #define NEXT_NEIGHBOUR_DEVICE_ID 0
 #endif
@@ -98,6 +110,7 @@ class esp_comm {
   message_t* get_incoming();
   message_t* get_outgoing();
   node_t* getCurrentSender();
+  byte* getMsgID();
 };
 
 #endif /*ESP_COMM_H*/

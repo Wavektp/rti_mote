@@ -5,11 +5,7 @@
  ***********************************************************/
 #define NET_PREFIX 0x10
 #define DEVICE_ID  0
-#if (DEVICE_ID == 0)
-  #define ROOT_NODE  // ROOT NODE
-#else
-  #define END_DEVICE  // END DEVICE
-#endif
+
 #define RESET_TIMEOUT 3       // [s]
 #define RTI_TIMEOUT   1000    // [ms]
 #define SEND_DELAY    15      // [ms]
@@ -20,6 +16,14 @@ typedef unsigned long timestamp_t;
  *                  RTI SETTING                            *
  ***********************************************************/
 #define RTI_NODE_COUNT 2
+#if (DEVICE_ID == 0)
+  #define ROOT_NODE  // ROOT NODE
+  #define PARENT    RTI_NODE_COUNT
+#else
+  #define END_DEVICE  // END DEVICE
+  #define PARENT    (DEVICE_ID - 1)
+#endif
+#define NEXTHOP     (DEVICE_ID + 1)
 #if DEVICE_ID > RTI_NODE_COUNT
   #error DEVICE_ID must be in range of NODE COUNT
 #endif /*DEVICE_ID > RTI_NODE_COUNT*/

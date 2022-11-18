@@ -18,12 +18,10 @@ void promiscuous_rx_cb(void* buf, wifi_promiscuous_pkt_type_t type);
 
 bool checkNeighbourP();
 
-#if defined(ROOT_NODE)
-byte msgID = 0;
-#endif /*ROOT_NODE*/
-
 const uint8_t brcst_addr[] = BROADCAST_MAC_ADDRESS;
-uint8_t device_mac_addr[] = DEVICE_MAC_ADDRESS;
+const uint8_t device_mac_addr[] = DEVICE_MAC_ADDRESS;
+const uint8_t parent_addr[] = PARENT_MAC_ADDRESS;
+const uint8_t nexthop_addr[] = NEXTHOP_MAC_ADDRESS;
 
 void esp_comm::begin(recv_cb_t recv, report_cb_t rep) {
   // Enable Serial
@@ -80,16 +78,11 @@ void esp_comm::send() {
   // send message
   if (((outgoing.type) & MESSAGE_INCOMPLETE_FLAG) == 0x00) {
     conf.isObserve = true;
-    conf.msg_sz = sizeof(outgoing);
+    conf.msgSZ = sizeof(outgoing);
   }
-#if defined(ROOT_NODE)
-  if ((outgoing.type) == MESSAGE_TYPE_BEACON) {
-    outgoing.msgID = msgID++;
-  }
-#endif /*ROOT_NODE*/
 #if defined(END_DEVICE)
   if ((outgoing.type) == MESSAGE_TYPE_CONTENT) {
-    outgoing.msgID = conf.msg_id;
+    outgoing.msgID = conf.msgID;
   }
 #endif /*END_DEVICE*/
   stamp = millis();
@@ -136,16 +129,22 @@ node_t* esp_comm::getCurrentSender() {
   return &cSender;
 }
 
+byte* esp_comm::getMsgID() {
+  return &conf.msgID;
+}
+
 void receive(const uint8_t* macAddr, const uint8_t* data, int len) {
   // copy data to incoming message
   re("\r\nReceived MSG:");
   memcpy(&incoming, data, sizeof(incoming));
   cSender.NID = incoming.sNID;
   cSender.DID = incoming.sDID;
-  verf("FROM N:%02x%02x \n", cSender.NID, cSender.DID);
+  repf("FROM N:%02x%02x \n", cSender.NID, cSender.DID);
   if (conf.isObserve) {  // Check next neighbour reception
-    reln("Network alive confirmed..");
-    conf.isObserve = false;
+    if (cSender.DID > DEVICE_ID || (cSender.DID == 0) || (incoming.msgID != conf.msgID)) {
+      reln("Network alive confirmed..");
+      conf.isObserve = false;
+    }
   }
 
   recv_cb(&incoming);
@@ -163,6 +162,20 @@ void promiscuous_rx_cb(void* buf, wifi_promiscuous_pkt_type_t type) {
     return;
 
   const wifi_promiscuous_pkt_t* ppkt = (wifi_promiscuous_pkt_t*)buf;
+  // Check void messages
+  int len = ppkt->rx_ctrl.sig_len;
+  if (len < 0) return;
+  // Check MAC Address
+  String sniff;
+  String mac;
+  for (int i = 8; i <= 15; i++) {
+    sniff += String(ppkt->payload[i], HEX);
+  }
+  for (int i = 4; i <= 15; i++) {
+    mac += sniff[i];
+  }
+  ver("\nWIFI SNIFFER: Sender MAC ADDRESS:" + mac);
+  
   int rssi = ppkt->rx_ctrl.rssi;
   // repf("WIFI CALLBACK: Retrieving RSSI: %02d, ", rssi);
   rep_cb(rssi);

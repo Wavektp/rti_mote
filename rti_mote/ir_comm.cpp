@@ -50,19 +50,19 @@ void ir_comm::receive() {
       sIRRecord = false;
     }
   }
-//   if (sIRRecord) {
-//     uint16_t ir = analogRead(IR_RX_PIN);
-//     // verf("IR Analog Read: %02i..", ir);
-//     uint8_t c = 0;
-//     while ((ir == NO_SIGNAL_LVL) && c < 100) {
-//       ir = analogRead(IR_RX_PIN);
-//       c++;
-//     }
-//     if (ir != NO_SIGNAL_LVL) {
-//       *p_write = ir;
-//       verf("Set IR = %04i \n", ir);
-//     }
-//   }
+  // if (sIRRecord) {
+  //   uint16_t ir = analogRead(IR_RX_PIN);
+  //   // verf("IR Analog Read: %02i..", ir);
+  //   uint8_t c = 0;
+  //   while ((ir == NO_SIGNAL_LVL) && c < 100) {
+  //     ir = analogRead(IR_RX_PIN);
+  //     c++;
+  //   }
+  //   if (ir != NO_SIGNAL_LVL) {
+  //     *p_write = ir;
+  //     verf("Set IR = %04i \n", ir);
+  //   }
+  // }
 }
 
 void ir_comm::set_p_write(volatile int* irRSS) {
