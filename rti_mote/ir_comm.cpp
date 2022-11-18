@@ -46,9 +46,9 @@ void ir_comm::receive() {
       // Serial.println();
       IrReceiver.resume();  // Enable receiving of the next value
     }
-  }
-  if (stamp - millis() > IR_DELAY) {
-    sIRRecord = false;
+    if (stamp - millis() > IR_DELAY) {
+      sIRRecord = false;
+    }
   }
 //   if (sIRRecord) {
 //     uint16_t ir = analogRead(IR_RX_PIN);
