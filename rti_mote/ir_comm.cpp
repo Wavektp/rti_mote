@@ -36,7 +36,7 @@ void ir_comm::receive() {
       re(IrReceiver.decodedIRData.command);
       *p_write = 1;
       sIRRecord = false;
-      reln(":Write IR reception BOOLEAN value \n");
+      re(":Write IR reception BOOLEAN value \n");
       // if (IrReceiver.decodedIRData.protocol == UNKNOWN) {
       //   Serial.println(
       //       F("Received noise or an unknown (or not yet enabled) protocol"));

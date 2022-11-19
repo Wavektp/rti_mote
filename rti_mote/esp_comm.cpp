@@ -88,21 +88,21 @@ void esp_comm::send() {
   stamp = millis();
   esp_err_t res =
       esp_now_send(brcst_addr, (uint8_t*)&outgoing, sizeof(outgoing));
-  Serial.print("ESP_NOW Sent Status: ");
+  re("ESP_NOW Sent Status: ");
   if (res == ESP_OK) {
-    Serial.println("SUCCESS");
+    reln("SUCCESS");
   } else if (res == ESP_ERR_ESPNOW_NOT_INIT) {
-    Serial.println("ESPNOW not Initialized");
+    reln("ESPNOW not Initialized");
   } else if (res == ESP_ERR_ESPNOW_ARG) {
-    Serial.println("Invalid Argument");
+    reln("Invalid Argument");
   } else if (res == ESP_ERR_ESPNOW_INTERNAL) {
-    Serial.println("Internal Error");
+    reln("Internal Error");
   } else if (res == ESP_ERR_ESPNOW_NO_MEM) {
-    Serial.println("ESP_ERR_ESPNOW_NO_MEM");
+    reln("ESP_ERR_ESPNOW_NO_MEM");
   } else if (res == ESP_ERR_ESPNOW_NOT_FOUND) {
-    Serial.println("Peer not found.");
+    reln("Peer not found.");
   } else {
-    Serial.println("Unexpected Errors");
+    reln("Unexpected Errors");
   }
 }
 
@@ -167,12 +167,7 @@ void promiscuous_rx_cb(void* buf, wifi_promiscuous_pkt_type_t type) {
 
   if (ppkt->payload[PROMISCUOUS_MAC_PREFIX_CHECK_INDEX] != PLACEHOLDER_CODE) return;
 
-  repf("MAC INDEX 10: %02x \n", ppkt->payload[PROMISCUOUS_MAC_PREFIX_CHECK_INDEX]);
-  repf("MAC INDEX 15: %02x \n", ppkt->payload[PROMISCUOUS_MAC_DEVICE_ID_INDEX]);
-
-  if  (ppkt->payload[PROMISCUOUS_MAC_DEVICE_ID_INDEX] == NEXT_NEIGHBOUR_DEVICE_ID) re("Sniffer: NEXTHOP Detected \n");
-  if  (ppkt->payload[PROMISCUOUS_MAC_DEVICE_ID_INDEX] == PARENT) re("Sniffer: PARENT Detected \n");
-  
+  byte id = ppkt->payload[PROMISCUOUS_MAC_DEVICE_ID_INDEX];
 
   // Check MAC Address
   // String sniff;
