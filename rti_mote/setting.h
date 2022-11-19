@@ -6,7 +6,7 @@
 #define NET_PREFIX 0x10
 #define DEVICE_ID  0
 
-#define RESET_TIMEOUT 3       // [s]
+#define RESET_TIMEOUT 1       // [s]
 #define RTI_TIMEOUT   20      // [ms]
 #define SEND_DELAY    20      // [ms]
 
