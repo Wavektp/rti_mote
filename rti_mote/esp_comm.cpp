@@ -164,6 +164,9 @@ void promiscuous_rx_cb(void* buf, wifi_promiscuous_pkt_type_t type) {
   // Check void messages
   int len = ppkt->rx_ctrl.sig_len;
   if (len < 0) return;
+
+  repf("MAC INDEX 10: %02x \n", ppkt->payload[10]);
+  repf("MAC INDEX 15: %02x \n", ppkt->payload[15]);
   // Check MAC Address
   // String sniff;
   // String mac;
