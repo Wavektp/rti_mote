@@ -158,23 +158,22 @@ void send_cb(const uint8_t* macAddr, esp_now_send_status_t st) {
 void promiscuous_rx_cb(void* buf, wifi_promiscuous_pkt_type_t type) {
   // All espnow traffic uses action frames which are a subtype of the mgmnt
   // frames so filter out everything else.
-  if (type != WIFI_PKT_MGMT)
-    return;
+  if (type != WIFI_PKT_MGMT) return;
 
   const wifi_promiscuous_pkt_t* ppkt = (wifi_promiscuous_pkt_t*)buf;
   // Check void messages
   int len = ppkt->rx_ctrl.sig_len;
   if (len < 0) return;
   // Check MAC Address
-  String sniff;
-  String mac;
-  for (int i = 8; i <= 15; i++) {
-    sniff += String(ppkt->payload[i], HEX);
-  }
-  for (int i = 4; i <= 15; i++) {
-    mac += sniff[i];
-  }
-  ver("\nWIFI SNIFFER: Sender MAC ADDRESS:" + mac);
+  // String sniff;
+  // String mac;
+  // for (int i = 8; i <= 15; i++) {
+  //   sniff += String(ppkt->payload[i], HEX);
+  // }
+  // for (int i = 4; i <= 15; i++) {
+  //   mac += sniff[i];
+  // }
+  // ver("\nWIFI SNIFFER: Sender MAC ADDRESS:" + mac);
   
   int rssi = ppkt->rx_ctrl.rssi;
   // repf("WIFI CALLBACK: Retrieving RSSI: %02d, ", rssi);
