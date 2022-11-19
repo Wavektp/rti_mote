@@ -9,8 +9,8 @@
 
 #define SERIAL_BAUDRATE 115200
 
-#define BROADCAST_CODE    0xFF
-#define PLACEHOLDER_CODE  0xAA
+#define BROADCAST_CODE   0xFF
+#define PLACEHOLDER_CODE 0xAA
 
 #define MAC_ADDR_SIZE     6
 #define MAC_ADDR_STR_SIZE 18
@@ -48,6 +48,9 @@
 
 #define MESSAGE_INCOMPLETE_FLAG 0x08
 #define MAX_CONTENT_SIZE        50
+
+#define PROMISCUOUS_MAC_PREFIX_CHECK_INDEX 10
+#define PROMISCUOUS_MAC_DEVICE_ID_INDEX    15
 
 /// @brief frame format for RTI node exchanges
 typedef struct {

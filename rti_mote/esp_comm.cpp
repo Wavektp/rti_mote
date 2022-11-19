@@ -165,8 +165,15 @@ void promiscuous_rx_cb(void* buf, wifi_promiscuous_pkt_type_t type) {
   int len = ppkt->rx_ctrl.sig_len;
   if (len < 0) return;
 
-  repf("MAC INDEX 10: %02x \n", ppkt->payload[10]);
-  repf("MAC INDEX 15: %02x \n", ppkt->payload[15]);
+  if (ppkt->payload[PROMISCUOUS_MAC_PREFIX_CHECK_INDEX] != PLACEHOLDER_CODE) return;
+
+  repf("MAC INDEX 10: %02x \n", ppkt->payload[PROMISCUOUS_MAC_PREFIX_CHECK_INDEX]);
+  repf("MAC INDEX 15: %02x \n", ppkt->payload[PROMISCUOUS_MAC_DEVICE_ID_INDEX]);
+
+  if  (ppkt->payload[PROMISCUOUS_MAC_DEVICE_ID_INDEX] == NEXT_NEIGHBOUR_DEVICE_ID) re("Sniffer: NEXTHOP Detected \n");
+  if  (ppkt->payload[PROMISCUOUS_MAC_DEVICE_ID_INDEX] == PARENT) re("Sniffer: PARENT Detected \n");
+  
+
   // Check MAC Address
   // String sniff;
   // String mac;
