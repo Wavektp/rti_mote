@@ -5,7 +5,7 @@ esp_comm espC;
 ir_comm irC;
 
 #if defined(ROOT_NODE)
-byte msgID = 0;
+byte msgID = 1;
 #endif /*ROOT_NODE*/
 
 void msgToStr(message_t* msg, char* str);
