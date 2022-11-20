@@ -11,8 +11,8 @@ byte msgID = 1;
 void msgToStr(message_t* msg, char* str);
 void create_rti_message(message_t* msg, byte type, bool isCompleted);
 void receive(message_t* incoming);
-void report(byte deviceID, int rssi);
-bool checkNeighbourP();
+void report(byte dID, int rssi);
+bool checkNeighbourP(byte dID, volatile uint8_t* pNID);
 
 void RTI::begin() {
   // Set watchdog timer
@@ -256,7 +256,8 @@ void receive(message_t* incoming) {
 #endif
 #if defined(END_DEVICE)
     re("CONTENT received: ");
-    if (checkNeighbourP()) {
+    node_t* cS = espC.getCurrentSender();
+    if (checkNeighbourP(cS->DID, &info.neighbourP)) {
       verf("Set IR Pointer to NEIGHBOUR %02x \n", info.neighbourP);
       irC.set_p_write(&info.neighbour[info.neighbourP].irRSS);
     } else {
@@ -281,18 +282,21 @@ void receive(message_t* incoming) {
   }
 }
 
-void report(int rssi) {
+void report(byte dID, int rssi) {
   info.tempRSSI = rssi;
   verf("RTI - REPORT CALLBACK SET RSSI: %02d \n", info.tempRSSI);
 #if defined(END_DEVICE)
   if (info.sSetRSS) {
-    verf("Attempt RSSI N%02x=%02d: ", info.neighbourP, info.tempRSSI);
-    verf("RSSI BEFORE SET: %02d \n", info.neighbour[info.neighbourP].RSS);
-    info.neighbour[info.neighbourP].RSS = info.tempRSSI;
-    repf("RSSI NEIGHBOUR: %02x%02x P:%02x RSSI:%02d \n",
-         info.neighbour[info.neighbourP].node.NID,
-         info.neighbour[info.neighbourP].node.DID, info.neighbourP,
-         info.neighbour[info.neighbourP].RSS);
+    byte nID;
+    if (checkNeighbourP(dID, &nID)) {
+      verf("Attempt RSSI N%02x-NID%02d=%02d: ",dID , nID, rssi);
+      verf("RSSI BEFORE SET: %02d \n", info.neighbour[nID].RSS);
+      info.neighbour[nID].RSS = info.tempRSSI;
+      repf("RSSI N: %02x%02x NBID:%02x RSSI:%02d \n",
+          info.neighbour[nID].node.NID,
+          info.neighbour[nID].node.DID, nID,
+          info.neighbour[nID].RSS);
+    }
     info.sSetRSS = false;
   }
 #endif /*END_DEVICE*/
@@ -305,35 +309,34 @@ void RTI::checkNeighbourP() {
 }
 #endif /*RTI_DEFAULT_SCHEME*/
 #if defined(RTI_SIDEWAY_SCHEME)
-bool checkNeighbourP() {
+bool checkNeighbourP(byte dID, volatile uint8_t* pNID) {
   info.neighbourP = RTI_NEIGHBOUR_COUNT;
   info.sSetRSS = false;
   // get currect sender from communication module
-  node_t* cS = espC.getCurrentSender();
-  verf("\r\nCHECK NEIGHBOUR: SIDEWAY SCHEME: SID:%02x: ", cS->DID);
-  if (cS->DID == 0) {
+  verf("\r\nCHECK NEIGHBOUR: SIDEWAY SCHEME: SID:%02x: ", dID);
+  if (dID == 0) {
     verln("ROOT NODE detected \n");
     return false;
   }
   uint8_t nID;
   if CHECKFLAG (info.pos, ODD_SIDE_NEIGHBOUR_FLAG) {
-    if (cS->DID % 2 == 0)
+    if (dID % 2 == 0)
       return false;
     ver("Neighbour on ODD Side - ");
-    nID = (cS->DID / 2);
+    nID = (dID / 2);
   }
   if CHECKFLAG (info.pos, EVEN_SIDE_NEIGHBOUR_FLAG) {
-    if (cS->DID % 2 == 1)
+    if (dID % 2 == 1)
       return false;
     ver("Neighbour on EVEN Side - ");
-    nID = (cS->DID / 2) - 1;
+    nID = (dID / 2) - 1;
   }
   if (nID >= RTI_NEIGHBOUR_COUNT) {
     ver("Neigbour ID out of bound");
     return false;
   }
   verf("SET NID:%02d - Set flag for RSSI record \n", nID);
-  info.neighbourP = (uint8_t)nID;
+  *pNID = (uint8_t)nID;
   info.sSetRSS = true;
   return true;
 }
