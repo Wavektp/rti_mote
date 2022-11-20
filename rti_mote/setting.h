@@ -4,7 +4,7 @@
  *                  DEVICE SETTING                         *
  ***********************************************************/
 #define NET_PREFIX 0x10
-#define DEVICE_ID  0
+#define DEVICE_ID  1
 
 #define RESET_TIMEOUT 1       // [s]
 #define RTI_TIMEOUT   20      // [ms]

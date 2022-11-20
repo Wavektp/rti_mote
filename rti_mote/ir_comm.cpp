@@ -47,6 +47,7 @@ void ir_comm::receive() {
       IrReceiver.resume();  // Enable receiving of the next value
     }
     if (stamp - millis() > IR_DELAY) {
+      verln("Unflag IR Reception");
       sIRRecord = false;
     }
   }

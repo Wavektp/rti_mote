@@ -12,7 +12,8 @@
 // #endif
 // #if ESP_ARDUINO_VERSION <= ESP_ARDUINO_VERSION_VAL(2, 0, 2)
 //   #define TONE_LEDC_CHANNEL \
-//     1  // Using channel 1 makes tone() independent of receiving timer -> No need
+//     1  // Using channel 1 makes tone() independent of receiving timer -> No
+//     need
 //        // to stop receiving timer.
 // void tone(uint8_t aPinNumber, unsigned int aFrequency) {
 //   ledcAttachPin(aPinNumber, TONE_LEDC_CHANNEL);
@@ -31,10 +32,10 @@
 // }
 // #endif
 
-#define IR_RECEIVE_PIN  23  // D15
-#define IR_SEND_PIN     34  // D4
-#define TONE_PIN        27  // D27 25 & 26 are DAC0 and 1
-#define APPLICATION_PIN 16  // RX2 pin
+#define IR_RECEIVE_PIN  IR_TX_PIN  // D15
+#define IR_SEND_PIN     IR_RX_PIN  // D4
+#define TONE_PIN        27         // D27 25 & 26 are DAC0 and 1
+#define APPLICATION_PIN 16         // RX2 pin
 
 #define IR_ADDRESS_16BIT ((NET_PREFIX << 8) | DEVICE_ID)
 #define IR_ADDRESS_32BIT ((IR_ADDRESS_16BIT << 16) | IR_ADDRESS_16BIT)
@@ -43,7 +44,7 @@
 #define IR_DELAY         10
 
 #define DECODE_NEC  // Includes Apple and Onkyo
-#define NO_SIGNAL_LVL   4095
+#define NO_SIGNAL_LVL 4095
 // #define DECODE_DISTANCE     // in case NEC is not received correctly
 // #define NO_DECODER
 

@@ -11,7 +11,7 @@ byte msgID = 1;
 void msgToStr(message_t* msg, char* str);
 void create_rti_message(message_t* msg, byte type, bool isCompleted);
 void receive(message_t* incoming);
-void report(int rssi);
+void report(byte deviceID, int rssi);
 bool checkNeighbourP();
 
 void RTI::begin() {
@@ -241,9 +241,8 @@ void receive(message_t* incoming) {
   esp_task_wdt_reset();
   info.sSetRSS = false;
   irC.setFlag(false, &info.tempIR);
-  verln("Unflag IR Reception");
   // copy data to incoming message
-  repf("RTI CALLBACK: ID=%02d", incoming->msgID);
+  repf("RTI CALLBACK: ID=%02d: ", incoming->msgID);
   if (incoming->type == MESSAGE_TYPE_BEACON) {
     re("BEACON received: \n");
   }
@@ -274,10 +273,10 @@ void receive(message_t* incoming) {
     if (incoming->msgID != (*pID)) {
       *pID = incoming->msgID;
       info.sPending = true;
+      reln("TOKEN RECEIVED..SET flag on pending message");
 #if defined(ROOT_NODE)
       msgID++;
 #endif 
-      reln("TOKEN RECEIVED..SET flag on pending message");
     }
   }
 }

@@ -69,7 +69,7 @@ typedef struct {
 
 typedef unsigned char byte;
 typedef void (*recv_cb_t)(message_t* incoming);
-typedef void (*report_cb_t)(int rssi);
+typedef void (*report_cb_t)(byte id, int rssi);
 typedef struct {
   byte NID = NET_PREFIX;
   byte DID;
