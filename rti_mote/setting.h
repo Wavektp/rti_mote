@@ -8,6 +8,7 @@
 
 #define RESET_TIMEOUT 1       // [s]
 #define RTI_TIMEOUT   30      // [ms]
+#define SEND_DELAY    15      // [ms]
 
 typedef unsigned long timestamp_t;
 
