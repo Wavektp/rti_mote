@@ -82,6 +82,7 @@ typedef struct {
 typedef unsigned char rti_position_scheme_t;
 
 typedef struct {
+  volatile byte token = 255;
   volatile bool sSetRSS = false;
   volatile bool sPending = false;
   volatile uint8_t neighbourP = 0;

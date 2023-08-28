@@ -62,8 +62,8 @@ typedef struct {
 
 typedef struct {
   bool isObserve = false;
-  byte msg_id;
-  size_t msg_sz;
+//  byte msg_id = 255;
+//  size_t msg_sz;
 } confirmable_t;
 
 #define NEXT_NEIGHBOUR_NET_PREFIX NET_PREFIX

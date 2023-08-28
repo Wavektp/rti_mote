@@ -18,9 +18,9 @@ void promiscuous_rx_cb(void* buf, wifi_promiscuous_pkt_type_t type);
 
 bool checkNeighbourP();
 
-#if defined(ROOT_NODE)
-byte msgID = 0;
-#endif /*ROOT_NODE*/
+//#if defined(ROOT_NODE)
+//byte msgID = 0;
+//#endif /*ROOT_NODE*/
 
 const uint8_t brcst_addr[] = BROADCAST_MAC_ADDRESS;
 uint8_t device_mac_addr[] = DEVICE_MAC_ADDRESS;
@@ -80,18 +80,18 @@ void esp_comm::send() {
   // send message
   if (((outgoing.type) & MESSAGE_INCOMPLETE_FLAG) == 0x00) {
     conf.isObserve = true;
-    conf.msg_sz = sizeof(outgoing);
+//    conf.msg_sz = sizeof(outgoing);
   }
-#if defined(ROOT_NODE)
-  if ((outgoing.type) == MESSAGE_TYPE_BEACON) {
-    outgoing.msgID = msgID++;
-  }
-#endif /*ROOT_NODE*/
-#if defined(END_DEVICE)
-  if ((outgoing.type) == MESSAGE_TYPE_CONTENT) {
-    outgoing.msgID = conf.msg_id;
-  }
-#endif /*END_DEVICE*/
+//#if defined(ROOT_NODE)
+//  if ((outgoing.type) == MESSAGE_TYPE_BEACON) {
+//    outgoing.msgID = msgID++;
+//  }
+//#endif /*ROOT_NODE*/
+//#if defined(END_DEVICE)
+//  if ((outgoing.type) == MESSAGE_TYPE_CONTENT) {
+//    outgoing.msgID = conf.msg_id;
+//  }
+//#endif /*END_DEVICE*/
   stamp = millis();
   esp_err_t res =
       esp_now_send(brcst_addr, (uint8_t*)&outgoing, sizeof(outgoing));
@@ -142,12 +142,12 @@ void receive(const uint8_t* macAddr, const uint8_t* data, int len) {
   memcpy(&incoming, data, sizeof(incoming));
   cSender.NID = incoming.sNID;
   cSender.DID = incoming.sDID;
-  verf("FROM N:%02x%02x \n", cSender.NID, cSender.DID);
+  
+  verf("FROM N:%02x%02x ID:%03d \n", cSender.NID, cSender.DID, incoming.msgID);
   if (conf.isObserve) {  // Check next neighbour reception
     reln("Network alive confirmed..");
     conf.isObserve = false;
   }
-
   recv_cb(&incoming);
 }
 

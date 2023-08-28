@@ -4,13 +4,13 @@
  *                  DEVICE SETTING                         *
  ***********************************************************/
 #define NET_PREFIX 0x10
-#define DEVICE_ID  0
+#define DEVICE_ID  8
 #if (DEVICE_ID == 0)
   #define ROOT_NODE  // ROOT NODE
 #else
   #define END_DEVICE  // END DEVICE
 #endif
-#define RESET_TIMEOUT 3       // [s]
+#define RESET_TIMEOUT 10       // [s]
 #define RTI_TIMEOUT   1000    // [ms]
 #define SEND_DELAY    50      // [ms]
 
@@ -19,7 +19,7 @@ typedef unsigned long timestamp_t;
 /***********************************************************
  *                  RTI SETTING                            *
  ***********************************************************/
-#define RTI_NODE_COUNT 2
+#define RTI_NODE_COUNT 8
 #if DEVICE_ID > RTI_NODE_COUNT
   #error DEVICE_ID must be in range of NODE COUNT
 #endif /*DEVICE_ID > RTI_NODE_COUNT*/
@@ -54,7 +54,7 @@ typedef unsigned long timestamp_t;
   #endif /*VERBOSE_REPORT*/
 #else
   #define re(x)
-  #define ref(...)
+  #define repf(...)
   #define reln(x)
   #define ver(x)
   #define verf(...)

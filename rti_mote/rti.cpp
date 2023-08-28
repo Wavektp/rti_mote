@@ -160,7 +160,9 @@ void create_rti_message(message_t* msg, byte type, bool isCompleted) {
   verf("Set NEXT:%02x%02x - ", msg->nNID, msg->nDID);
 #if defined(ROOT_NODE)
   if (type == MESSAGE_TYPE_BEACON) {
-    reln("BEACON");
+    byte tokenID = info.token + 1;
+    repf("BEACON ID:%03x \n", tokenID);
+    msg->msgID = tokenID++;
     msg->len = 0;
     for (int i = 0; i < MAX_CONTENT_SIZE; i++) {
       msg->content[i] = 0;
@@ -169,8 +171,9 @@ void create_rti_message(message_t* msg, byte type, bool isCompleted) {
 #endif /*ROOT_NODE*/
 #if defined(END_DEVICE)
   if (type == MESSAGE_TYPE_CONTENT) {
-    reln("CONTENT: ");
+    repf("CONTENT: ID:%03x \n", info.token);
     msg->len = 2 * RTI_NEIGHBOUR_COUNT + 2;
+    msg->msgID = info.token;
     msg->content[0] = RTI_MSG_MASK_RSS;
     for (int i = 1; i < (RTI_NEIGHBOUR_COUNT + 1); i++) {
       // verf("LOOK RSSI I%02x=%02d \n", (i - 1), info.neighbour[i - 1].RSS);
@@ -211,10 +214,10 @@ void RTI::routine() {
     // send ESP-NOW and reset
     message_t* m = espC.get_outgoing();
 #if defined(END_DEVICE)
-    timestamp_t stamp = millis();
-    while (millis() - stamp < SEND_DELAY) {
-      irC.send();
-    }
+//    timestamp_t stamp = millis();
+//    while (millis() - stamp < SEND_DELAY) {
+//      irC.send();
+//    }
     // Create CONTENT message
     create_rti_message(m, MESSAGE_TYPE_CONTENT, true);
 #endif /*END_DEVICE*/
@@ -223,6 +226,8 @@ void RTI::routine() {
     create_rti_message(m, MESSAGE_TYPE_BEACON, true);
     bout((uint8_t *)m, sizeof(*m));
 #endif /*ROOT_NODE*/
+    // Singh 23/08/23: Debugging watchdog triggering every 6 secs, patch Watchdog 
+    esp_task_wdt_reset();
     espC.send();
   }
   if (espC.checkTimeout(RTI_TIMEOUT)) {
@@ -265,8 +270,11 @@ void receive(message_t* incoming) {
   verf("THIS N:%02x%02x \n", NET_PREFIX, DEVICE_ID);
   if (incoming->nNID == NET_PREFIX &&
       incoming->nDID == DEVICE_ID) {  // if this node is the next sender
-    reln("TOKEN RECEIVED..SET flag on pending message");
-    info.sPending = true;
+    if ((info.token != incoming->msgID)||(incoming->msgID == 0)) { 
+      reln("TOKEN RECEIVED..SET flag on pending message");
+      info.token = incoming->msgID;
+      info.sPending = true;
+    }
   }
 }
 
